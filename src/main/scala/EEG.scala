@@ -1,3 +1,11 @@
+import javafx.application.Application
+import javafx.event.ActionEvent
+import javafx.geometry.Pos
+import javafx.scene.Scene
+import javafx.scene.chart.{LineChart, NumberAxis, XYChart}
+import javafx.scene.control.{Button, Label, ScrollPane}
+import javafx.scene.layout.{AnchorPane, BorderPane, StackPane, VBox}
+import javafx.stage.Stage
 import stimulus.model.{Stimulus, StimulusType}
 
 import scala.collection.mutable.ListBuffer
@@ -9,13 +17,13 @@ import scala.collection.mutable.ListBuffer
   */
 object EEG {
     def main(args: Array[String]): Unit = {
-        // Read measurements from csv files
-        val stimuliBart = readWords("Bart_NounVerb.csv")
-        val stimuliBarbara = readWords("Bart_NounVerb.csv")
-
-        println("Gegevens Bart:\n" + stimuliBart)
-        println("Gegevens Barbara:\n" + stimuliBarbara)
+        Application.launch(classOf[EEG], args: _*)
     }
+}
+
+class EEG extends Application {
+    private val stimuliBart = readWords("Bart_NounVerb.csv")
+    private val stimuliBarbara = readWords("Bart_NounVerb.csv")
 
     def readWords(path: String): (Vector[Stimulus], Vector[Stimulus]) = {
         val nouns = ListBuffer[Stimulus]()
@@ -55,10 +63,59 @@ object EEG {
 
             }
         }
+
         // Close reader
         bufferedSource.close
 
         // Return stimuli
         (nouns.toVector, verbs.toVector)
+    }
+
+    override def start(primaryStage: Stage): Unit = {
+        // Create root element
+        val root = new VBox()
+        root.setAlignment(Pos.CENTER)
+        root.setSpacing(30.0)
+        root.getChildren.add(new Label("EEG data Bart"))
+
+        // Create the graphs
+        for (stimulus <- stimuliBart._1 ++ stimuliBart._2) {
+            // Define the axis
+            val xAxis = new NumberAxis
+            val yAxis = new NumberAxis
+
+            // Define the chart
+            val lineChart = new LineChart[Number, Number](xAxis, yAxis)
+            lineChart.setTitle("Word: " + stimulus.word + " (Type: " + stimulus.stimulusType + ")")
+
+            var counter: Int = 0
+            for (contact_point <- stimulus.measurements) {
+                // Define series
+                val series = new XYChart.Series[Number, Number]
+
+                // Populate the series with data
+                for (measurement <- contact_point._2) {
+                    series.setName(contact_point._1)
+                    series.getData.add(new XYChart.Data[Number, Number](counter, measurement))
+                    counter += 1
+                }
+                counter = 0
+
+                // Add series to chart
+                lineChart.getData.add(series)
+            }
+
+            // Add chart to root
+            root.getChildren.add(lineChart)
+        }
+
+        // Create scrollpane for scrollable graphs
+        val scrollRoot = new ScrollPane(root)
+        scrollRoot.setFitToWidth(true)
+
+        // Set up & show stage
+        primaryStage.setTitle("EEG")
+        primaryStage.setScene(new Scene(scrollRoot, 1200, 900))
+        primaryStage.show()
     }
 }
