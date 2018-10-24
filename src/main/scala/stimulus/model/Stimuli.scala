@@ -65,5 +65,16 @@ class Stimuli {
         (nouns.toVector, verbs.toVector)
     }
 
+//    private def filterBadData(listBuffer: ListBuffer[Stimulus]) : ListBuffer[Stimulus] = {
+//        listBuffer.toStream
+//          .foreach(s => {
+//              s.measurements.toStream.foreach(kvPair => {
+//                  kvPair._2.
+//              })
+//          })
+//
+//        null
+//    }
+
 
 }
