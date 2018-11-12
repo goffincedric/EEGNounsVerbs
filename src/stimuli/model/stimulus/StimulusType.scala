@@ -1,4 +1,4 @@
-package stimulus.model
+package stimuli.model.stimulus
 
 /**
   * @author Cédric Goffin
