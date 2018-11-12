@@ -51,6 +51,7 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
     }
 
 
+
     private def mean[T: Numeric](xs: Iterable[T]): Double =
         xs.sum.toDouble / xs.size
 

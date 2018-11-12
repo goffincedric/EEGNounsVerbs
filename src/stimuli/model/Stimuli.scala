@@ -14,6 +14,7 @@ import scala.util.control.Breaks._
   */
 class Stimuli(path: String, endsWith: String) {
     // Define contactpoints and their respective column index
+    //Todo: Dynamisch maken
     val contact_points = Array(("AF3", 3), ("F7", 4), ("F3", 5), ("FC5", 6), ("T7", 7), ("P7", 8), ("O1", 9), ("O2", 10), ("P8", 11), ("T8", 12), ("FC6", 13), ("F4", 14), ("F8", 15), ("AF4", 16))
     val timestamp_col = 19
 
@@ -21,10 +22,13 @@ class Stimuli(path: String, endsWith: String) {
     val stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
 
     private def getListOfCSVFiles: List[File] = {
+        // Get directory with csv files
         val d = new File(path)
         if (d.exists && d.isDirectory) {
+            // Get all files that have compatible names
             d.listFiles.filter(_.isFile).filter(_.getName.endsWith(endsWith)).toList
         } else {
+            // Return emty list of files
             List[File]()
         }
     }
@@ -70,9 +74,6 @@ class Stimuli(path: String, endsWith: String) {
             StimulusType.getType(firstLine(1)),
             firstLine(1),
             linesToMeasurements(stimulusLines.tail)
-              map (meting =>
-                (meting._1, cleanupData(meting._2, 5))
-              )
         ))
 
         if (lines.length > count) {
@@ -87,8 +88,9 @@ class Stimuli(path: String, endsWith: String) {
     private def linesToMeasurements(lines: Vector[String]): Map[String, Vector[Measurement]] = {
         // Convert lines to measurements and group by contact point
         lines.flatMap(lineToMeasurements)
-          .groupBy(_._1)
-          .mapValues(_.map(_._2))
+          .groupBy(_._1) // Group measurements by contact point
+          .mapValues(_.map(_._2)) // Map grouped measurements to map
+          .map(meting => (meting._1, cleanupData(meting._2, 5))) // Cleanup dirty measurements
     }
 
     private def lineToMeasurements(line: String): Map[String, Measurement] = {
@@ -108,18 +110,13 @@ class Stimuli(path: String, endsWith: String) {
             if (m.value < 3000) {
                 val index = vector.indexOf(m)
 
-                // check if there are 5 elements before current index
-                if ((index - 5) < 0) {
-                    // Get average from previous measurements
+                // Check if there are 5 elements before current index
+                if ((index - 5) < 0) // Get average from previous measurements
                     new Measurement(getAverage(vector.take(n_average - index)), m.delay)
-                } else {
-
-                    // Get average from 5 previous measurements
+                else // Get average from 5 previous measurements
                     new Measurement(getAverage(vector.take(n_average)), m.delay)
-                }
-            } else {
+            } else
                 m
-            }
         }).toVector
     }
 

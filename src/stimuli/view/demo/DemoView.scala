@@ -11,7 +11,7 @@ import javafx.scene.layout.VBox
   *
   */
 class DemoView extends TabPane {
-    def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Unit = {
+    def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Tab = {
         // Container for graphs
         val graphContainer = new Accordion()
 
@@ -37,7 +37,8 @@ class DemoView extends TabPane {
 
         // Add tab to tabPane
         this.getTabs.add(tab)
+
+        // Return tab
+        tab
     }
-
-
 }
