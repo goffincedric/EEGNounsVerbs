@@ -47,9 +47,10 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
         }).toMap
 
         // Add new tab to view
-        demoView.addTab(stimuli._1, lineChartsMap)
-    }
+        val tab = demoView.addTab(stimuli._1, lineChartsMap)
 
+
+    }
 
 
     private def mean[T: Numeric](xs: Iterable[T]): Double =

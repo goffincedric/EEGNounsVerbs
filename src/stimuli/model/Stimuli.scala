@@ -5,7 +5,6 @@ import java.io.File
 import stimuli.model.stimulus.{Measurement, Stimulus, StimulusType}
 
 import scala.io.Source
-import scala.util.control.Breaks._
 
 /**
   * @author Cédric Goffin
@@ -13,22 +12,16 @@ import scala.util.control.Breaks._
   *
   */
 class Stimuli(path: String, endsWith: String) {
-    // Define contactpoints and their respective column index
-    //Todo: Dynamisch maken
-    val contact_points = Array(("AF3", 3), ("F7", 4), ("F3", 5), ("FC5", 6), ("T7", 7), ("P7", 8), ("O1", 9), ("O2", 10), ("P8", 11), ("T8", 12), ("FC6", 13), ("F4", 14), ("F8", 15), ("AF4", 16))
-    val timestamp_col = 19
-
     // Fill map with CSV data
     val stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
 
     private def getListOfCSVFiles: List[File] = {
-        // Get directory with csv files
-        val d = new File(path)
+        val d = new File(path) // Get directory with csv files
         if (d.exists && d.isDirectory) {
             // Get all files that have compatible names
             d.listFiles.filter(_.isFile).filter(_.getName.endsWith(endsWith)).toList
         } else {
-            // Return emty list of files
+            // Return empty list of files
             List[File]()
         }
     }
@@ -45,55 +38,56 @@ class Stimuli(path: String, endsWith: String) {
     }
 
     private def readFile(file: File): (Vector[Stimulus], Vector[Stimulus]) = {
-        // Open reader to file
-        val bufferedSource = Source.fromFile(file)
-        // Get lines from file
-        val lines = bufferedSource.getLines().drop(1).toVector
-        // Close reader
-        bufferedSource.close
+        val bufferedSource = Source.fromFile(file) // Open reader to file
+        val lines = bufferedSource.getLines().toVector // Get lines from file
+        bufferedSource.close // Close reader
 
-        // Lines to Stimulus objects and return
-        splitNounsVerbs(linesToStimuli(lines))
+        // Define contact points array and their respective column index
+        val headerLine = lines.head
+        val contact_points = Array("AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2", "P8", "T8", "FC6", "F4", "F8", "AF4").map(col => (col, getColumnIndex(headerLine, "\t", col)))
+        val timestamp_col = getColumnIndex(headerLine, "\t", "TIMESTAMP")
+
+        // Convert lines to Stimulus objects and return sorted by StimulusType
+        splitNounsVerbs(linesToStimuli(lines.tail, contact_points, timestamp_col, Vector.empty, Vector.empty))
     }
 
-    private def linesToStimuli(lines: Vector[String]): Vector[Stimulus] = {
-        // Count lines until next word
-        var count = 0
-        breakable {
-            for (line <- lines) {
-                val cols = line.split("\t").map(_.trim)
-                if (count > 0 && cols(0).equalsIgnoreCase("stimulus")) break
-                else count += 1
+    private def getColumnIndex(headerLine: String, delimiter: String, column: String): Int = {
+        headerLine.split(delimiter).map(_.trim).indexOf(column)
+    }
+
+    private def linesToStimuli(lines: Vector[String], contact_points: Array[(String, Int)], timestamp_col: Int, stimulusLines: Vector[String], stimuliVector: Vector[Stimulus]): Vector[Stimulus] = {
+        if (lines.isEmpty) // If no lines left to convert
+            stimuliVector // Return vector with stimulus objects
+        else {
+            // Get first line
+            val cols = lines.head.split("\t").map(_.trim)
+            if (stimulusLines.nonEmpty && cols(0).equalsIgnoreCase("stimulus")) { // Check if first line contains stimulus word
+                // Get first line from stimulusLines
+                val firstLine = stimulusLines.head.split("\t").map(_.trim)
+                // Convert to stimulus object
+                val stimulus = Vector(new Stimulus(
+                    StimulusType.getType(firstLine(1)),
+                    firstLine(1),
+                    linesToMeasurements(stimulusLines.tail, contact_points, timestamp_col)
+                ))
+                // Recursive call to self with newly converted stimulus
+                linesToStimuli(lines.tail, contact_points, timestamp_col, Vector(lines.head), stimuliVector ++ stimulus)
+            } else {
+                // Recursive call to self
+                linesToStimuli(lines.tail, contact_points, timestamp_col, stimulusLines :+ lines.head, stimuliVector)
             }
         }
-
-        // Get lines for next stimulus
-        val stimulusLines = lines.take(count - 1)
-        val firstLine = stimulusLines.head.split("\t").map(_.trim)
-        val stimulus = Vector(new Stimulus(
-            StimulusType.getType(firstLine(1)),
-            firstLine(1),
-            linesToMeasurements(stimulusLines.tail)
-        ))
-
-        if (lines.length > count) {
-            // return stimulus + Stimulus list from remaining lines
-            stimulus ++ linesToStimuli(lines.takeRight(lines.length - count))
-        } else {
-            // return stimulus
-            stimulus
-        }
     }
 
-    private def linesToMeasurements(lines: Vector[String]): Map[String, Vector[Measurement]] = {
+    private def linesToMeasurements(lines: Vector[String], contact_points: Array[(String, Int)], timestamp_col: Int): Map[String, Vector[Measurement]] = {
         // Convert lines to measurements and group by contact point
-        lines.flatMap(lineToMeasurements)
+        lines.flatMap(line => lineToMeasurements(line, contact_points, timestamp_col))
           .groupBy(_._1) // Group measurements by contact point
           .mapValues(_.map(_._2)) // Map grouped measurements to map
           .map(meting => (meting._1, cleanupData(meting._2, 5))) // Cleanup dirty measurements
     }
 
-    private def lineToMeasurements(line: String): Map[String, Measurement] = {
+    private def lineToMeasurements(line: String, contact_points: Array[(String, Int)], timestamp_col: Int): Map[String, Measurement] = {
         // Convert line to measurement
         val cols = line.split("\t").map(_.trim)
         contact_points.map(cp => cp._1 -> new Measurement(cols(cp._2).toDouble, cols(timestamp_col).toDouble)).toMap
@@ -121,6 +115,6 @@ class Stimuli(path: String, endsWith: String) {
     }
 
     private def getAverage(vector: Vector[Measurement]): Double = {
-        vector.map(_.value).sum.toDouble / vector.size
+        vector.map(_.value).sum / vector.size
     }
 }
