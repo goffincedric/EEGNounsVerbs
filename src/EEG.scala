@@ -1,8 +1,8 @@
 import javafx.application.Application
 import javafx.scene.Scene
-import javafx.stage.Stage
-import stimulus.model.Stimuli
-import stimulus.view.demo.{DemoPresenter, DemoView}
+import javafx.stage.{Screen, Stage}
+import stimuli.model.Stimuli
+import stimuli.view.demo.{DemoPresenter, DemoView}
 
 /**
   * @author Cédric Goffin
@@ -17,12 +17,14 @@ object EEG {
 
 class EEG extends Application {
     override def start(primaryStage: Stage): Unit = {
-        val model = new Stimuli
+        val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv")
         val demoview = new DemoView
         val presenter = new DemoPresenter(model, demoview)
 
         // Set up & show stage
         primaryStage.setTitle("EEG")
+        primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
+        primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getHeight)
         primaryStage.setScene(new Scene(demoview, 1200, 900))
         primaryStage.toFront()
         primaryStage.show()
