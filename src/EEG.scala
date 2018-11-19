@@ -23,9 +23,10 @@ class EEG extends Application {
 
         // Set up & show stage
         primaryStage.setTitle("EEG")
+        primaryStage.setScene(new Scene(demoview))
         primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
-        primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getHeight)
-        primaryStage.setScene(new Scene(demoview, 1200, 900))
+        primaryStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
+        primaryStage.setMaximized(true)
         primaryStage.toFront()
         primaryStage.show()
     }

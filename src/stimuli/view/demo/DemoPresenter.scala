@@ -1,10 +1,16 @@
 package stimuli.view.demo
 
-import javafx.scene.chart.{LineChart, NumberAxis, XYChart}
-import stimuli.model.Stimuli
-import stimuli.model.stimulus.Stimulus
+import java.util.stream.Collectors
 
-import scala.Numeric.Implicits._
+import javafx.collections.transformation.FilteredList
+import javafx.scene.{Node, Parent}
+import javafx.scene.chart.{LineChart, NumberAxis, XYChart}
+import javafx.scene.control.Alert.AlertType
+import javafx.scene.control._
+import javafx.scene.layout.{HBox, VBox}
+import stimuli.model.Stimuli
+import stimuli.model.analysis.AnalysisService
+import stimuli.model.stimulus.Stimulus
 
 /**
   * @author Cédric Goffin
@@ -12,7 +18,13 @@ import scala.Numeric.Implicits._
   *
   */
 class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) {
+    private val analysisService = new AnalysisService
+
+    // Add data to view
     model.stimuliMap.foreach(addDataPane)
+
+    // Add eventhandlers to tabs
+    addEventHandlers()
 
     private def addDataPane(stimuli: (String, (Vector[Stimulus], Vector[Stimulus]))): Unit = {
         // Create the graphs
@@ -47,21 +59,34 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
         }).toMap
 
         // Add new tab to view
-        val tab = demoView.addTab(stimuli._1, lineChartsMap)
-
-
+        demoView.addTab(stimuli._1, lineChartsMap)
     }
 
+    private def addEventHandlers() : Unit = {
+        demoView.getTabs.forEach(tab => {
+            //TODO: set eventhandlers for chart buttons
+            val vbox = tab.getContent.asInstanceOf[ScrollPane].getContent.asInstanceOf[VBox]
+            val titledPanes = vbox.getChildren.toArray
+              .toStream.withFilter(node => node.isInstanceOf[TitledPane])
+              .map(node => node.asInstanceOf[TitledPane])
+              .toVector
 
-    private def mean[T: Numeric](xs: Iterable[T]): Double =
-        xs.sum.toDouble / xs.size
-
-    private def variance[T: Numeric](xs: Iterable[T]): Double = {
-        val avg = mean(xs)
-
-        xs.map(_.toDouble).map(a => math.pow(a - avg, 2)).sum / xs.size
+            titledPanes.foreach(tp => {
+                val buttons = tp.getContent.asInstanceOf[VBox].getChildren.get(1).asInstanceOf[HBox].getChildren
+                buttons.forEach(button => button.setOnMouseClicked(_ => {
+                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
+                    alert.show()
+                }))
+            })
+        })
     }
 
-    private def stdDev[T: Numeric](xs: Iterable[T]): Double =
-        math.sqrt(variance(xs))
+    private def analyseChartData(word: String, name: String) : Unit = {
+
+        null
+    }
+
+    private def getByUserData(parent: Parent, userData: Any): FilteredList[Node] = {
+        parent.getChildrenUnmodifiable.filtered(node => node.getUserData.equals(userData))
+    }
 }

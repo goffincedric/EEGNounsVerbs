@@ -3,7 +3,7 @@ package stimuli.view.demo
 import javafx.geometry.{Insets, Pos}
 import javafx.scene.chart.LineChart
 import javafx.scene.control._
-import javafx.scene.layout.VBox
+import javafx.scene.layout.{BorderPane, HBox, VBox}
 
 /**
   * @author Cédric Goffin
@@ -11,13 +11,7 @@ import javafx.scene.layout.VBox
   *
   */
 class DemoView extends TabPane {
-    def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Tab = {
-        // Container for graphs
-        val graphContainer = new Accordion()
-
-        // Add graphs to container
-        chartsMap.foreach(entry => graphContainer.getPanes.add(new TitledPane(entry._1, entry._2)))
-
+    def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Unit = {
         // Create scrollpane for scrollable graphs
         val title = new Label("EEG data " + name)
         title.setPadding(new Insets(10))
@@ -26,8 +20,27 @@ class DemoView extends TabPane {
         title.setScaleX(1.5)
         title.setScaleY(1.5)
 
-        // Create root
-        val root = new ScrollPane(new VBox(title, graphContainer))
+        // Container for graphs
+        val vbox = new VBox(title)
+
+        // Add graphs to container
+        chartsMap.map(entry => {
+            // TitledPane with data
+            val buttonsContainer = new HBox(new Button("Analyse chart"))
+            buttonsContainer.setUserData("graphActions")
+            val tp = new TitledPane(
+                entry._1, // Title
+                new VBox(
+                    entry._2, // Chart
+                    buttonsContainer // HBox with buttons for chart actions
+                )
+            )
+            tp.setExpanded(false)
+            tp
+        }).foreach(vbox.getChildren.add)
+
+        // Create scrollpane for scrollable graphs
+        val root = new ScrollPane(vbox)
         root.setFitToWidth(true)
 
         // Create tab
@@ -37,8 +50,5 @@ class DemoView extends TabPane {
 
         // Add tab to tabPane
         this.getTabs.add(tab)
-
-        // Return tab
-        tab
     }
 }
