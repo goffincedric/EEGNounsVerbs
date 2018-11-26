@@ -13,7 +13,11 @@ import scala.io.Source
   */
 class Stimuli(path: String, endsWith: String) {
     // Fill map with CSV data
-    val stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
+    private val _stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
+
+    def stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = _stimuliMap
+
+    def stimuliMapUnsorted: Map[String, Vector[Stimulus]] = stimuliMap.map(kvPair => kvPair._1 -> (kvPair._2._1 ++ kvPair._2._2))
 
     private def getListOfCSVFiles: List[File] = {
         val d = new File(path) // Get directory with csv files

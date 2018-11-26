@@ -1,16 +1,16 @@
 package stimuli.view.demo
 
-import java.util.stream.Collectors
-
 import javafx.collections.transformation.FilteredList
-import javafx.scene.{Node, Parent}
 import javafx.scene.chart.{LineChart, NumberAxis, XYChart}
-import javafx.scene.control.Alert.AlertType
 import javafx.scene.control._
 import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.{Node, Parent, Scene}
+import javafx.stage.{Screen, Stage}
 import stimuli.model.Stimuli
 import stimuli.model.analysis.AnalysisService
 import stimuli.model.stimulus.Stimulus
+import stimuli.utils.customChart.LineChartWithMarkers
+import stimuli.view.chartAnalysis.{ChartAnalysisPresenter, ChartAnalysisView}
 
 /**
   * @author Cédric Goffin
@@ -18,6 +18,7 @@ import stimuli.model.stimulus.Stimulus
   *
   */
 class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) {
+    //TODO: Scherm maken waar opties ingesteld kunnen worden (standaardafwijking, grootte sliding window (1ste twee seconden = grootte * 10ms, laatste 2 secondsn = grootte * 100ms), ...
     private val analysisService = new AnalysisService
 
     // Add data to view
@@ -62,26 +63,59 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
         demoView.addTab(stimuli._1, lineChartsMap)
     }
 
-    private def addEventHandlers() : Unit = {
+    private def addEventHandlers(): Unit = {
         demoView.getTabs.forEach(tab => {
             //TODO: set eventhandlers for chart buttons
             val vbox = tab.getContent.asInstanceOf[ScrollPane].getContent.asInstanceOf[VBox]
-            val titledPanes = vbox.getChildren.toArray
-              .toStream.withFilter(node => node.isInstanceOf[TitledPane])
+            val titledPanes = vbox.getChildren.toArray.toStream
+              .withFilter(node => node.isInstanceOf[TitledPane])
               .map(node => node.asInstanceOf[TitledPane])
               .toVector
 
             titledPanes.foreach(tp => {
-                val buttons = tp.getContent.asInstanceOf[VBox].getChildren.get(1).asInstanceOf[HBox].getChildren
+                val tpChildren = tp.getContent.asInstanceOf[VBox].getChildren.toArray
+                val buttons = tpChildren.toStream
+                  .withFilter(node => node.isInstanceOf[HBox])
+                  .map(node => node.asInstanceOf[HBox])
+                  .filter(hbox => hbox.getId.equals("buttonBox"))
+                  .toVector(0).getChildren
+
                 buttons.forEach(button => button.setOnMouseClicked(_ => {
-                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
-                    alert.show()
+                    val analysisText = tpChildren.toStream
+                      .withFilter(node => node.isInstanceOf[Label])
+                      .map(node => node.asInstanceOf[Label])
+                      .toVector(0)
+
+                    val buttonData = button.getUserData.asInstanceOf[(String, String)]
+
+
+                    //                    analysisText.setText("Baseline (mean): " + analysisService.calcBaseLine(model.stimuliMapUnsorted(tab.getText).map(stimulus => stimulus.))) // Gaat niet werken -> analysis text in nieuwe window openen met baseline per sensor per woord
+                    //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
+                    //                    alert.show()
+
+                    val chartAnalysisView = new ChartAnalysisView(String.format("Graphanalysis word: %s, person: %s", buttonData._1, buttonData._2))
+                    new ChartAnalysisPresenter(model, buttonData._1, buttonData._2, chartAnalysisView)
+                    val newStage = new Stage()
+                    newStage.setScene(new Scene(chartAnalysisView))
+                    newStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
+                    newStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
+                    newStage.setMaximized(true)
+                    newStage.toFront()
+                    newStage.show()
                 }))
+
+                //                buttons.forEach(button => button.setOnMouseClicked(_ => {
+                //
+                //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
+                //                    alert.show()
+                //
+                //
+                //                }))
             })
         })
     }
 
-    private def analyseChartData(word: String, name: String) : Unit = {
+    private def analyseChartData(word: String, name: String): Unit = {
 
         null
     }

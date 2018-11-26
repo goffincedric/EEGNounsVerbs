@@ -3,7 +3,7 @@ package stimuli.view.demo
 import javafx.geometry.{Insets, Pos}
 import javafx.scene.chart.LineChart
 import javafx.scene.control._
-import javafx.scene.layout.{BorderPane, HBox, VBox}
+import javafx.scene.layout.{HBox, VBox}
 
 /**
   * @author Cédric Goffin
@@ -12,7 +12,7 @@ import javafx.scene.layout.{BorderPane, HBox, VBox}
   */
 class DemoView extends TabPane {
     def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Unit = {
-        // Create scrollpane for scrollable graphs
+        // Create title label
         val title = new Label("EEG data " + name)
         title.setPadding(new Insets(10))
         title.setMaxWidth(Double.MaxValue)
@@ -21,26 +21,31 @@ class DemoView extends TabPane {
         title.setScaleY(1.5)
 
         // Container for graphs
-        val vbox = new VBox(title)
+        val titledPaneContainer = new VBox(title)
 
         // Add graphs to container
-        chartsMap.map(entry => {
+        chartsMap.foreach(entry => {
             // TitledPane with data
-            val buttonsContainer = new HBox(new Button("Analyse chart"))
-            buttonsContainer.setUserData("graphActions")
+            val analyseChartButton = new Button("Analyse chart")
+            analyseChartButton.setUserData((name, entry._1))
+
+            val buttonsContainer = new HBox(analyseChartButton)
+            buttonsContainer.setId("buttonBox")
+
             val tp = new TitledPane(
                 entry._1, // Title
                 new VBox(
                     entry._2, // Chart
+                    new Label(""), // Text for analysis output
                     buttonsContainer // HBox with buttons for chart actions
                 )
             )
             tp.setExpanded(false)
-            tp
-        }).foreach(vbox.getChildren.add)
+            titledPaneContainer.getChildren.add(tp)
+        })
 
         // Create scrollpane for scrollable graphs
-        val root = new ScrollPane(vbox)
+        val root = new ScrollPane(titledPaneContainer)
         root.setFitToWidth(true)
 
         // Create tab
