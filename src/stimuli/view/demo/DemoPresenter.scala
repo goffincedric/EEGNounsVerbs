@@ -35,7 +35,7 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             val yAxis = new NumberAxis
 
             // Define the chart
-            val lineChart = new LineChart[Number, Number](xAxis, yAxis)
+            val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(stimulus.toString)
 
             var counter = 0

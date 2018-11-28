@@ -4,7 +4,8 @@ import java.util.Objects
 
 import javafx.collections.FXCollections
 import javafx.scene.chart.{Axis, LineChart, XYChart}
-import javafx.scene.shape.Line
+import javafx.scene.paint.Color
+import javafx.scene.shape.{Line, Rectangle}
 
 /**
   * @author Cédric Goffin
@@ -15,6 +16,9 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
     private val horizontalMarkers = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
     horizontalMarkers.addListener(_ => layoutPlotChildren())
     private val verticalMarkers = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
+    verticalMarkers.addListener(_ => layoutPlotChildren())
+
+    private val verticalRangeMarkers  = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
     verticalMarkers.addListener(_ => layoutPlotChildren())
 
     def addHorizontalValueMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -53,6 +57,26 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         verticalMarkers.remove(marker)
     }
 
+    def addVerticalRangeMarker(marker: XYChart.Data[X, Y]): Unit = {
+        Objects.requireNonNull(marker, "the marker must not be null")
+        if (verticalRangeMarkers.contains(marker)) return
+        val rectangle = new Rectangle(0, 0, 0, 0)
+        rectangle.setStroke(Color.TRANSPARENT)
+        rectangle.setFill(Color.color(Math.random(), Math.random(), Math.random(), 0.2))
+        marker.setNode(rectangle)
+        getPlotChildren.add(rectangle)
+        verticalRangeMarkers.add(marker)
+    }
+
+    def removeVerticalRangeMarker(marker: XYChart.Data[X, Y]): Unit = {
+        Objects.requireNonNull(marker, "the marker must not be null")
+        if (marker.getNode != null) {
+            getPlotChildren.remove(marker.getNode)
+            marker.setNode(null)
+        }
+        verticalRangeMarkers.remove(marker)
+    }
+
     override protected def layoutPlotChildren(): Unit = {
         super.layoutPlotChildren()
         horizontalMarkers.forEach(marker => {
@@ -71,6 +95,15 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             line.setStartY(0d)
             line.setEndY(getBoundsInLocal.getHeight)
             line.toFront()
+        })
+
+        verticalRangeMarkers.forEach(marker => {
+            val rectangle: Rectangle = marker.getNode.asInstanceOf[Rectangle]
+            rectangle.setX(getXAxis.getDisplayPosition(marker.getXValue) + 0.5) // 0.5 for crispness
+
+            rectangle.setWidth(getXAxis.getDisplayPosition(marker.getYValue.asInstanceOf[X]) - getXAxis.getDisplayPosition(marker.getXValue))
+            rectangle.setY(0d)
+            rectangle.setHeight(getBoundsInLocal.getHeight)
         })
     }
 }

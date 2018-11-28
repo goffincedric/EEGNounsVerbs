@@ -5,6 +5,6 @@ package stimuli.model.analysis
   *         23/11/2018 10:14
   *
   */
-class SensorResult(val data: Map[String/* sensor */, Int /* Gegeven dat opvalt volgens analyse (WAT????) */ ], val start: Int, val nMeasurements: Int) {
+class SensorResult(val data: Map[String/* sensorName */, Int /* Index van measurement dat opvalt volgens analyse */ ], val start: Int, val nMeasurements: Int) {
 
 }
