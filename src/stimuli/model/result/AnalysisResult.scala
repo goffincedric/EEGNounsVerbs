@@ -8,6 +8,6 @@ import stimuli.model.stimulus.Stimulus
   *         23/11/2018 09:55
   *
   */
-class AnalysisResult(val stimulus: Stimulus, val meanBaseLine: Double, val results: Vector[SensorResult]) {
+class AnalysisResult(val stimulus: Stimulus, val results: Vector[SensorResult]) {
 
 }

@@ -33,10 +33,12 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             // Define the axis
             val xAxis = new NumberAxis
             val yAxis = new NumberAxis
+            yAxis.setForceZeroInRange(false)
 
             // Define the chart
             val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(stimulus.toString)
+            lineChart.setCreateSymbols(false)
 
             var counter = 0
             for (contact_point <- stimulus.measurements) {

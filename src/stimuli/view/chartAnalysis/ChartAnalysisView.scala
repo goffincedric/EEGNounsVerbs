@@ -3,7 +3,8 @@ package stimuli.view.chartAnalysis
 import javafx.geometry.{Insets, Pos}
 import javafx.scene.chart.LineChart
 import javafx.scene.control._
-import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.layout.{BorderPane, HBox, VBox}
+import org.controlsfx.control.CheckComboBox
 
 /**
   * @author Cédric Goffin
@@ -19,11 +20,22 @@ class ChartAnalysisView(title: String) extends ScrollPane {
     lblTitle.setScaleX(1.5)
     lblTitle.setScaleY(1.5)
 
+
+    // Controls & conainer HBox
+    val chcmbSensors = new CheckComboBox[String]()
+    val buttonbar = new HBox(chcmbSensors)
+    buttonbar.setAlignment(Pos.CENTER)
+
     // Container for graphs
-    val titledPaneContainer = new VBox(lblTitle)
+    val titledPaneContainer = new VBox()
+
+    // Root borderpane
+    val root = new BorderPane()
+    root.setTop(new VBox(lblTitle, buttonbar))
+    root.setCenter(titledPaneContainer)
 
     // Add vbox to scrollPane
-    this.setContent(titledPaneContainer)
+    this.setContent(root)
     this.setFitToWidth(true)
 
     def addCharts(chartsMap: Vector[LineChart[Number, Number]]) : Unit = {
@@ -39,6 +51,9 @@ class ChartAnalysisView(title: String) extends ScrollPane {
             )
             tp.setExpanded(true)
             titledPaneContainer.getChildren.add(tp)
+
+            // Add to checkComboBox
+            chcmbSensors.getItems.add(chart.getTitle)
         })
     }
 }
