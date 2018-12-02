@@ -59,12 +59,16 @@ class Stimuli(path: String, endsWith: String, hardcodedDelayMS: Double = 7.8125)
     }
 
     private def linesToStimuli(lines: Vector[String], contact_points: Array[(String, Int)], stimulusLines: Vector[String] = Vector.empty, stimuliVector: Vector[Stimulus] = Vector.empty): Vector[Stimulus] = {
-        if (lines.isEmpty) // If no lines left to convert
+        if (lines.isEmpty && stimulusLines.isEmpty) // If no lines left to convert
             stimuliVector // Return vector with stimulus objects
         else {
             // Get first line
-            val cols = lines.head.split("\t").map(_.trim)
-            if (stimulusLines.nonEmpty && cols(0).equalsIgnoreCase("stimulus")) { // Check if first line contains stimulus word
+            val cols: Array[String] =
+                if (lines.nonEmpty)
+                    lines.head.split("\t").map(_.trim)
+                else
+                    Array.empty[String]
+            if (stimulusLines.nonEmpty && (lines.isEmpty || cols(0).equalsIgnoreCase("stimulus"))) { // Check if first line contains stimulus word
                 // Get first line from stimulusLines
                 val firstLine = stimulusLines.head.split("\t").map(_.trim)
                 // Convert to stimulus object
@@ -73,8 +77,12 @@ class Stimuli(path: String, endsWith: String, hardcodedDelayMS: Double = 7.8125)
                     firstLine(1),
                     linesToMeasurements(stimulusLines.tail, contact_points)
                 )
-                // Recursive call to self with newly converted stimulus
-                linesToStimuli(lines.tail, contact_points, Vector(lines.head), stimuliVector :+ stimulus)
+
+                if (lines.isEmpty) stimuliVector :+ stimulus
+                else {
+                    // Recursive call to self with newly converted stimulus
+                    linesToStimuli(lines.tail, contact_points, Vector(lines.head), stimuliVector :+ stimulus)
+                }
             } else {
                 // Recursive call to self
                 linesToStimuli(lines.tail, contact_points, stimulusLines :+ lines.head, stimuliVector)

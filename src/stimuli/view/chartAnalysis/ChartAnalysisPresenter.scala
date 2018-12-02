@@ -24,11 +24,30 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     addEventHandlers()
 
     private def createSensorGraphs(stimulus: Stimulus, sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
+        chartAnalysisView.fullLineChart.setTitle(stimulus.toString)
+
+        stimulus.measurements.foreach(cp => {
+            // Define series
+            val series = new XYChart.Series[Number, Number]
+
+            // Populate the series with data
+            for (measurement <- cp._2) {
+                series.setName(cp._1)
+                series.getData.add(new XYChart.Data[Number, Number](cp._2.indexOf(measurement), measurement.value))
+            }
+
+            // Add series to chart
+            chartAnalysisView.fullLineChart.getData.add(series)
+
+            // Set line style
+            series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
+        })
+
         // Create the graphs
         val lineChartsMap = stimulus.measurements.map(sensorMeasurements => {
             // Analyse chart
             val baseLine = analysisService.calcBaseLine(sensorMeasurements._2.map(m => m.value))
-            val sensorResult = analysisService.analyseSensorData(sensorMeasurements, 10, 4, 0.95, 100, 1, 0.97)
+            val sensorResult = analysisService.analyseSensorDataNormalDist(sensorMeasurements, 10, 4, 0.95, 100, 1, 0.97)
 
             // Define the axis
             val xAxis = new NumberAxis
@@ -44,13 +63,14 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             val series = new XYChart.Series[Number, Number]
             series.setName(sensorMeasurements._1)
 
-            var counter = 0
             sensorMeasurements._2.foreach(measurement => {
                 // Populate the series with data
-                series.getData.add(new XYChart.Data[Number, Number](counter, measurement.value))
-                counter += 1
+                series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
             })
             lineChart.getData.add(series)
+
+            // Set line style
+            series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
 
             // Add valuemarker for baseline
             lineChart.addHorizontalValueMarker(new XYChart.Data[Number, Number](0, baseLine))
@@ -73,20 +93,53 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     }
 
     private def addEventHandlers(): Unit = {
+        chartAnalysisView.btnClearAllMarkers.setOnMouseClicked(_ => {
+            chartAnalysisView.fullLineChart.removeAllHorizontalValueMarkers()
+            chartAnalysisView.fullLineChart.removeAllVerticalValueMarkers()
+            chartAnalysisView.fullLineChart.removeAllVerticalRangeMarkers()
+        })
+
+        chartAnalysisView.btnClearHMarkers.setOnMouseClicked(_ => chartAnalysisView.fullLineChart.removeAllHorizontalValueMarkers())
+
+        chartAnalysisView.btnClearVMarkers.setOnMouseClicked(_ => {
+            chartAnalysisView.fullLineChart.removeAllVerticalValueMarkers()
+            chartAnalysisView.fullLineChart.removeAllVerticalRangeMarkers()
+        })
+
         chartAnalysisView.chcmbSensors.getCheckModel.getCheckedItems.addListener(new ListChangeListener[String] {
             override def onChanged(c: ListChangeListener.Change[_ <: String]): Unit = {
                 while (c.next()) {
                     if (c.wasAdded()) {
-                        val tp = chartAnalysisView.titledPaneContainer.getChildren.filtered(n => n.asInstanceOf[TitledPane].getText.split("Sensor: ")(1).equalsIgnoreCase(c.getAddedSubList.get(0))).get(0)
+                        val tp = chartAnalysisView.titledPaneContainer.getChildren
+                          .filtered(n => n.isInstanceOf[TitledPane])
+                          .filtered(n => n.asInstanceOf[TitledPane].getText.split("Sensor: ")(1).equalsIgnoreCase(c.getAddedSubList.get(0)))
+                          .get(0)
                         tp.setVisible(true)
                         tp.setManaged(true)
+
+                        val seriesNode = chartAnalysisView.fullLineChart.getData
+                          .filtered(serie => serie.getName.equalsIgnoreCase(c.getAddedSubList.get(0)))
+                          .get(0).getNode
+                        seriesNode.setVisible(true)
+                        seriesNode.setManaged(true)
                     } else if (c.wasRemoved()) {
-                        val tp = chartAnalysisView.titledPaneContainer.getChildren.filtered(n => n.asInstanceOf[TitledPane].getText.split("Sensor: ")(1).equalsIgnoreCase(c.getRemoved.get(0))).get(0)
+                        val tp = chartAnalysisView.titledPaneContainer.getChildren
+                          .filtered(n => n.isInstanceOf[TitledPane])
+                          .filtered(n => n.asInstanceOf[TitledPane].getText.split("Sensor: ")(1).equalsIgnoreCase(c.getRemoved.get(0)))
+                          .get(0)
                         tp.setVisible(false)
                         tp.setManaged(false)
+
+                        val seriesNode = chartAnalysisView.fullLineChart.getData
+                          .filtered(serie => serie.getName.equalsIgnoreCase(c.getRemoved.get(0)))
+                          .get(0).getNode
+                        seriesNode.setVisible(false)
+                        seriesNode.setManaged(false)
                     }
                 }
             }
         })
     }
+
+
 }

@@ -18,11 +18,18 @@ class AnalysisService {
 
     def analyseStimulus(stimulus: Stimulus, windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): AnalysisResult = {
         val word = stimulus.word
-        val sensorResults = stimulus.measurements.map(analyseSensorData(_, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo)).toVector
+        val sensorResults = stimulus.measurements.map(analyseSensorDataNormalDist(_, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo)).toVector
         new AnalysisResult(stimulus, sensorResults)
     }
 
-    def analyseSensorData(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
+    def analyseSensorDataHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
+        
+
+
+        null
+    }
+
+    def analyseSensorDataNormalDist(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
         // Data opdelen in eerste 2 en laatste 2 seconden
         val datasets = splitDataset(sensorMeasurements._2, 2000)
 
@@ -66,7 +73,7 @@ class AnalysisService {
                         (normalDistribution.probability(normalDistribution.getSupportLowerBound, m.value), m)
                     else
                         (normalDistribution.probability(m.value, normalDistribution.getSupportUpperBound), m)
-                }).filter(m => /* !resultsMeasurementList.contains(m._2) && */ m._1 < (1 - probabilityTrigger))
+                }).filter(m => m._1 < (1 - probabilityTrigger))
 
                 analyseDataFramesNormalDist(
                     data.tail,

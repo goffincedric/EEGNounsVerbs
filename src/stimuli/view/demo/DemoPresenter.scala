@@ -40,7 +40,6 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             lineChart.setTitle(stimulus.toString)
             lineChart.setCreateSymbols(false)
 
-            var counter = 0
             for (contact_point <- stimulus.measurements) {
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -48,13 +47,14 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                 // Populate the series with data
                 for (measurement <- contact_point._2) {
                     series.setName(contact_point._1)
-                    series.getData.add(new XYChart.Data[Number, Number](counter, measurement.value))
-                    counter += 1
+                    series.getData.add(new XYChart.Data[Number, Number](contact_point._2.indexOf(measurement), measurement.value))
                 }
-                counter = 0
 
                 // Add series to chart
                 lineChart.getData.add(series)
+
+                // Set line style
+                series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
             }
 
             // Return tuple with word and corresponding linechart
@@ -67,7 +67,6 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
 
     private def addEventHandlers(): Unit = {
         demoView.getTabs.forEach(tab => {
-            //TODO: set eventhandlers for chart buttons
             val vbox = tab.getContent.asInstanceOf[ScrollPane].getContent.asInstanceOf[VBox]
             val titledPanes = vbox.getChildren.toArray.toStream
               .withFilter(node => node.isInstanceOf[TitledPane])
@@ -95,31 +94,20 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                     //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
                     //                    alert.show()
 
-                    val chartAnalysisView = new ChartAnalysisView(String.format("Graphanalysis word: %s, person: %s", buttonData._1, buttonData._2))
+                    val chartAnalysisView = new ChartAnalysisView(String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2))
                     new ChartAnalysisPresenter(model, buttonData._1, buttonData._2, chartAnalysisView)
                     val newStage = new Stage()
-                    newStage.setScene(new Scene(chartAnalysisView))
+                    val newScene = new Scene(chartAnalysisView)
+                    newScene.getStylesheets.addAll(demoView.getScene.getStylesheets)
+                    newStage.setScene(newScene)
                     newStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
                     newStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
                     newStage.setMaximized(true)
                     newStage.toFront()
                     newStage.show()
                 }))
-
-                //                buttons.forEach(button => button.setOnMouseClicked(_ => {
-                //
-                //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
-                //                    alert.show()
-                //
-                //
-                //                }))
             })
         })
-    }
-
-    private def analyseChartData(word: String, name: String): Unit = {
-
-        null
     }
 
     private def getByUserData(parent: Parent, userData: Any): FilteredList[Node] = {

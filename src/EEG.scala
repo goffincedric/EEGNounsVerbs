@@ -29,8 +29,12 @@ class EEG extends Application {
             val presenter = new DemoPresenter(model, demoview)
 
             // Set up & show stage
+            val scene = new Scene(demoview)
+            scene.getStylesheets.add("style/material-fx-v0_3.css")
+            scene.getStylesheets.add("style/materialfx-toggleswitch.css")
+//            scene.getStylesheets.add("style/Goliath.css")
             primaryStage.setTitle("EEG")
-            primaryStage.setScene(new Scene(demoview))
+            primaryStage.setScene(scene)
             primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
             primaryStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
             primaryStage.setMaximized(true)

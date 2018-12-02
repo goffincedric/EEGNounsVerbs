@@ -11,7 +11,7 @@ import javafx.scene.layout.{HBox, VBox}
   *
   */
 class DemoView extends TabPane {
-    def addTab(name: String, chartsMap: Map[String, LineChart[Number, Number]]): Unit = {
+    def addTab(name: String, lineChartsMap: Map[String, LineChart[Number, Number]]): Unit = {
         // Create title label
         val title = new Label("EEG data " + name)
         title.setPadding(new Insets(10))
@@ -24,7 +24,7 @@ class DemoView extends TabPane {
         val titledPaneContainer = new VBox(title)
 
         // Add graphs to container
-        chartsMap.foreach(entry => {
+        lineChartsMap.foreach(entry => {
             // TitledPane with data
             val analyseChartButton = new Button("Analyse chart")
             analyseChartButton.setUserData((name, entry._1))
