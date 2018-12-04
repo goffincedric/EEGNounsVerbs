@@ -37,14 +37,19 @@ class ChartAnalysisView(title: String) extends ScrollPane {
     // Separator
     val separator = new Separator()
 
-    // Container for graphs in TitledPanes
-    val lblSensorsTitle = new Label("Sensor detail charts")
-    val titledPaneContainer = new VBox(lblSensorsTitle)
+    // Container for NormalDistribution graphs in TitledPanes
+    val titledPaneContainerSlidingWindow = new VBox()
+
+    // Container for NormalDistribution graphs in TitledPanes
+    val titledPaneContainerNormal = new VBox()
+
+    // General wrapper container for graphs
+    val tpContainer = new VBox(titledPaneContainerSlidingWindow)
 
     // Root borderpane
     val root = new BorderPane()
     val topVBox = new VBox(lblTitle, buttonbar)
-    val centerHbox = new VBox(fullLineChart, separator, titledPaneContainer)
+    val centerHbox = new VBox(fullLineChart, separator, tpContainer)
 
     layoutNodes()
 
@@ -83,34 +88,48 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         /* Separator */
         //        separator.setStyle("-fx-border-style: solid; -fx-border-width: 1px;")
 
-        /* Sensors title lable */
-        lblSensorsTitle.setPadding(new Insets(10))
-        lblSensorsTitle.setMaxWidth(Double.MaxValue)
-        lblSensorsTitle.setAlignment(Pos.CENTER)
-        lblSensorsTitle.setScaleX(1.5)
-        lblSensorsTitle.setScaleY(1.5)
-
         // Assign nodes to borderpane
         root.setTop(topVBox)
         root.setCenter(centerHbox)
     }
 
-    def addCharts(chartsMap: Vector[LineChart[Number, Number]]): Unit = {
+    def addCharts(chartsMap: Map[String, Vector[LineChart[Number, Number]]], title: String, container: VBox): Unit = {
+        /* Title label */
+        val titleLabel = new Label(title)
+        titleLabel.setPadding(new Insets(10))
+        titleLabel.setMaxWidth(Double.MaxValue)
+        titleLabel.setAlignment(Pos.CENTER)
+        titleLabel.setScaleX(1.5)
+        titleLabel.setScaleY(1.5)
+
+        // Clear previous graphs
+        container.getChildren.clear()
+        container.getChildren.add(titleLabel)
+
         // Add graphs to container
-        chartsMap.foreach(chart => {
+        chartsMap.foreach(entry => {
+            val graphBox = new VBox()
             // TitledPane with data
             val tp = new TitledPane(
-                "Sensor: " + chart.getTitle, // Title
-                new VBox(
-                    chart, // Chart
-                    new Label("") // Text for analysis output
-                )
+                "Sensor: " + entry._1, // Title
+                graphBox
             )
             tp.setExpanded(true)
-            titledPaneContainer.getChildren.add(tp)
 
-            // Add to checkComboBox
-            chcmbSensors.getItems.add(chart.getTitle)
+            entry._2.foreach(chart => {
+                graphBox.getChildren.add(chart)
+            })
+
+            // Add TitledPane to root vbox
+            container.getChildren.add(tp)
         })
+    }
+
+    def getChartsFromContainer(container: VBox): Map[String, Vector[LineChartWithMarkers[Number, Number]]] = {
+        container.getChildren.toArray.toStream
+          .filter(n => n.isInstanceOf[TitledPane]).map(n => n.asInstanceOf[TitledPane])
+          .map(tp => tp.getText.replace("Sensor: ", "") -> tp.getContent.asInstanceOf[VBox].getChildren.toArray.toVector
+            .filter(n => n.isInstanceOf[LineChartWithMarkers[Number, Number]]).map(n => n.asInstanceOf[LineChartWithMarkers[Number, Number]])
+          ).toMap
     }
 }

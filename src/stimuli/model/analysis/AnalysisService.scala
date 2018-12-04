@@ -25,7 +25,7 @@ class AnalysisService {
     def mergeSensorResultsResults(sensorResults: Iterable[SensorResult]): SensorResult = {
         // Merge all SensorResult indexes
         val indexes = sensorResults
-          .flatMap(sr => sr.data)
+          .flatMap(sr => sr.verticalMarkers)
           .flatMap(indexes => {
               if (indexes._1 == indexes._2) Vector(indexes._1)
               else (indexes._1 to indexes._2).toVector
@@ -64,8 +64,10 @@ class AnalysisService {
             analyseDataFramesHorWindow(datasets._1, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, mean, stdDev, 0) ++ analyseDataFramesHorWindow(datasets._2, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, mean, stdDev, datasets._1.size)
         }
 
+        val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes.distinct.sorted)
+
         // Return new SensorResult with recursion vector
-        Vector(new SensorResult(sensorMeasurements._1, mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes))) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
+        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs)) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
     }
 
     private def analyseDataFramesHorWindow(data: Vector[Measurement], windowsMs: Double, windowSize: Int, probabilityTrigger: Double, mean: Double, stdDev: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
@@ -78,7 +80,7 @@ class AnalysisService {
             val windowStdDev = calcStdDev(window.map(m => m.value))
 
             val measurements = (if (windowMean > mean) {
-                window
+                window.filter(m => m.value > mean)
             } else {
                 Vector.empty[Measurement]
             }) ++ (if (windowStdDev > stdDev) {
@@ -121,7 +123,7 @@ class AnalysisService {
         val remarkableNormalDistIndexes = analyseDataFramesNormalDist(datasets._1, normalDist, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, 0) ++ analyseDataFramesNormalDist(datasets._2, normalDist, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, indexOffset = datasets._1.size)
 
         // stdDev (standard deviance ( standaard afwijking)) vragen via parameter
-        val remarkableIndexes = mergeRemarkableMeasurementIndexes((remarkableNormalDistIndexes ++ Vector()).distinct.sorted)
+        val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableNormalDistIndexes.distinct.sorted)
 
         new SensorResult(sensorMeasurements._1, remarkableIndexes)
     }
@@ -188,7 +190,7 @@ class AnalysisService {
             splitDataset(measurements, splitTimeMs, time + measurements(index).delay, index + 1)
     }
 
-    private def getFirstWindow(data: Vector[Measurement], windowMs: Double, windowSize: Int = 1, count: Int = 0): Vector[Measurement] = {
+    def getFirstWindow(data: Vector[Measurement], windowMs: Double, windowSize: Int = 1, count: Int = 0): Vector[Measurement] = {
         if (count > data.length || data.take(count).map(m => m.delay).sum > (windowMs * windowSize)) data.take(count - 1)
         else {
             getFirstWindow(data, windowMs, windowSize, count + 1)
