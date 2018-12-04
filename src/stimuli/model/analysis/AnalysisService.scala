@@ -1,7 +1,7 @@
 package stimuli.model.analysis
 
 import org.apache.commons.math3.distribution.NormalDistribution
-import stimuli.model.result.AnalysisResult
+import stimuli.model.analysis.result.{AnalysisResult, SensorResult}
 import stimuli.model.stimulus.{Measurement, Stimulus}
 
 import scala.Numeric.Implicits._
@@ -18,18 +18,93 @@ class AnalysisService {
 
     def analyseStimulus(stimulus: Stimulus, windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): AnalysisResult = {
         val word = stimulus.word
-        val sensorResults = stimulus.measurements.map(analyseSensorDataNormalDist(_, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo)).toVector
+        val sensorResults = stimulus.measurements.map(analyseNormalDist(_, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo)).toVector
         new AnalysisResult(stimulus, sensorResults)
     }
 
-    def analyseSensorDataHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
-        
+    def mergeSensorResultsResults(sensorResults: Iterable[SensorResult]): SensorResult = {
+        // Merge all SensorResult indexes
+        val indexes = sensorResults
+          .flatMap(sr => sr.data)
+          .flatMap(indexes => {
+              if (indexes._1 == indexes._2) Vector(indexes._1)
+              else (indexes._1 to indexes._2).toVector
+          }).toStream
+          .sorted
+          .distinct
+          .toVector
 
+        // Merge indexes
+        val mergedIndexes = mergeRemarkableMeasurementIndexes(indexes)
 
-        null
+        // Return unified SensorResult
+        new SensorResult("Overview", mergedIndexes)
     }
 
-    def analyseSensorDataNormalDist(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
+    def analyseHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double, maxRangeMS: Double = 4000, rangeStepMs: Double = 1000, counter: Int = 1): Vector[SensorResult] = {
+        // Recursion check
+        if (counter * rangeStepMs > maxRangeMS) {
+            // Return sensorResult vector
+            return Vector.empty
+        }
+
+        // Get range from sensorMeasurements
+        val range = getFirstWindow(sensorMeasurements._2, counter * rangeStepMs)
+        // Split dataset in first and last part
+        val datasets = splitDataset(range, 2000)
+
+        // Calc mean and stdDev
+        val mean = calcMean(range.map(m => m.value))
+        val stdDev = calcStdDev(range.map(m => m.value))
+
+        // Get noticeable indexes from range
+        val remarkableHorWindowIndexes = if (datasets._2.isEmpty) {
+            analyseDataFramesHorWindow(datasets._1, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, mean, stdDev, 0)
+        } else {
+            analyseDataFramesHorWindow(datasets._1, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, mean, stdDev, 0) ++ analyseDataFramesHorWindow(datasets._2, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, mean, stdDev, datasets._1.size)
+        }
+
+        // Return new SensorResult with recursion vector
+        Vector(new SensorResult(sensorMeasurements._1, mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes))) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
+    }
+
+    private def analyseDataFramesHorWindow(data: Vector[Measurement], windowsMs: Double, windowSize: Int, probabilityTrigger: Double, mean: Double, stdDev: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
+        if (data.length < windowSize) {
+            resultsMeasurementList.map(m => origData.indexOf(m) + indexOffset)
+        } else {
+            val window = getFirstWindow(data, windowsMs, windowSize)
+
+            val windowMean = calcMean(window.map(m => m.value))
+            val windowStdDev = calcStdDev(window.map(m => m.value))
+
+            val measurements = (if (windowMean > mean) {
+                window
+            } else {
+                Vector.empty[Measurement]
+            }) ++ (if (windowStdDev > stdDev) {
+                window
+            } else {
+                Vector.empty[Measurement]
+            })
+
+            analyseDataFramesHorWindow(
+                data.tail,
+                windowsMs,
+                windowSize,
+                probabilityTrigger,
+                mean,
+                stdDev,
+                indexOffset,
+                resultsMeasurementList ++ measurements,
+                if (origData.nonEmpty)
+                    origData
+                else
+                    data
+            )
+        }
+    }
+
+    def analyseNormalDist(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
         // Data opdelen in eerste 2 en laatste 2 seconden
         val datasets = splitDataset(sensorMeasurements._2, 2000)
 
@@ -107,7 +182,7 @@ class AnalysisService {
     }
 
     private def splitDataset(measurements: Vector[Measurement], splitTimeMs: Double, time: Double = 0, index: Int = 0): (Vector[Measurement], Vector[Measurement]) = {
-        if (time + measurements(index).delay > splitTimeMs)
+        if (index == measurements.length || time + measurements(index).delay > splitTimeMs)
             (measurements.take(index), measurements.takeRight(measurements.length - index))
         else
             splitDataset(measurements, splitTimeMs, time + measurements(index).delay, index + 1)

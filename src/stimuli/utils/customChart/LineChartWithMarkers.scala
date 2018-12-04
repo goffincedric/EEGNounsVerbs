@@ -113,6 +113,12 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         _verticalRangeMarkers.clear()
     }
 
+    def removeAllMarkers(): Unit = {
+        removeAllHorizontalValueMarkers()
+        removeAllVerticalValueMarkers()
+        removeAllVerticalRangeMarkers()
+    }
+
     override protected def layoutPlotChildren(): Unit = {
         super.layoutPlotChildren()
         _horizontalMarkers.forEach(marker => {

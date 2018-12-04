@@ -1,6 +1,5 @@
-package stimuli.model.result
+package stimuli.model.analysis.result
 
-import stimuli.model.analysis.SensorResult
 import stimuli.model.stimulus.Stimulus
 
 /**

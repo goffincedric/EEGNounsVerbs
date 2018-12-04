@@ -5,6 +5,7 @@ import javafx.scene.chart.{LineChart, NumberAxis}
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox, VBox}
 import org.controlsfx.control.CheckComboBox
+import stimuli.model.analysis.AnalysisType
 import stimuli.utils.customChart.LineChartWithMarkers
 
 /**
@@ -18,10 +19,14 @@ class ChartAnalysisView(title: String) extends ScrollPane {
     val lblTitle = new Label(title)
     // Controls & conainer HBox
     val chcmbSensors = new CheckComboBox[String]()
+    val cmbAnalysisChoice = new ComboBox[String]()
+    val btnAnalyse = new Button("Analyse charts")
     val btnClearAllMarkers = new Button("Clear all markers")
     val btnClearVMarkers = new Button("Clear vertical markers")
     val btnClearHMarkers = new Button("Clear horizontal markers")
-    val buttonbar = new HBox(10, chcmbSensors, btnClearAllMarkers, btnClearHMarkers, btnClearVMarkers)
+    val leftNodes = new HBox(10, chcmbSensors, cmbAnalysisChoice, btnAnalyse)
+    val rightNodes = new HBox(10, btnClearAllMarkers, btnClearHMarkers, btnClearVMarkers)
+    val buttonbar = new HBox(leftNodes, rightNodes)
 
     /* Center */
     // Full Linechart
@@ -58,8 +63,13 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         lblTitle.setScaleY(1.5)
 
         /* Button bar */
-        buttonbar.setAlignment(Pos.CENTER)
+        leftNodes.setAlignment(Pos.CENTER_LEFT)
         chcmbSensors.setPadding(new Insets(10))
+        AnalysisType.values.foreach(t => cmbAnalysisChoice.getItems.add(t.toString))
+        cmbAnalysisChoice.getSelectionModel.selectFirst()
+        cmbAnalysisChoice.setPadding(new Insets(0, 10, 0, 10))
+        btnAnalyse.setPadding(new Insets(10))
+        rightNodes.setAlignment(Pos.CENTER)
         btnClearAllMarkers.setPadding(new Insets(10))
         btnClearHMarkers.setPadding(new Insets(10))
         btnClearVMarkers.setPadding(new Insets(10))
@@ -71,7 +81,7 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         yAxis.setForceZeroInRange(false)
 
         /* Separator */
-//        separator.setStyle("-fx-border-style: solid; -fx-border-width: 1px;")
+        //        separator.setStyle("-fx-border-style: solid; -fx-border-width: 1px;")
 
         /* Sensors title lable */
         lblSensorsTitle.setPadding(new Insets(10))
