@@ -26,7 +26,7 @@ class ChartAnalysisView(title: String) extends ScrollPane {
     val btnClearHMarkers = new Button("Clear horizontal markers")
     val leftNodes = new HBox(10, chcmbSensors, cmbAnalysisChoice, btnAnalyse)
     val rightNodes = new HBox(10, btnClearAllMarkers, btnClearHMarkers, btnClearVMarkers)
-    val buttonbar = new HBox(leftNodes, rightNodes)
+    val buttonbar = new HBox(10, leftNodes, rightNodes)
 
     /* Center */
     // Full Linechart
@@ -83,10 +83,8 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         /* Linechart */
         fullLineChart.setCreateSymbols(false)
         fullLineChart.setPadding(new Insets(10))
+        xAxis.setLabel("Measurement")
         yAxis.setForceZeroInRange(false)
-
-        /* Separator */
-        //        separator.setStyle("-fx-border-style: solid; -fx-border-width: 1px;")
 
         // Assign nodes to borderpane
         root.setTop(topVBox)
@@ -117,6 +115,9 @@ class ChartAnalysisView(title: String) extends ScrollPane {
             tp.setExpanded(true)
 
             entry._2.foreach(chart => {
+                if (entry._2.indexOf(chart) > 0) {
+                    graphBox.getChildren.add(new Separator())
+                }
                 graphBox.getChildren.add(chart)
             })
 

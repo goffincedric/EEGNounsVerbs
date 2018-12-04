@@ -48,6 +48,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             val linecharts = Vector(1000, 2000, 3000, 4000).map(range => {
                 // Define the axis
                 val xAxis = new NumberAxis
+                xAxis.setLabel("Measurement")
                 val yAxis = new NumberAxis
                 yAxis.setForceZeroInRange(false)
 
@@ -83,6 +84,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         val lineChartsNormalDistMap = stimulus.measurements.map(sensorMeasurements => {
             // Define the axis
             val xAxis = new NumberAxis
+            xAxis.setLabel("Measurement")
             val yAxis = new NumberAxis
             yAxis.setForceZeroInRange(false)
 
@@ -125,12 +127,13 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             val linecharts = results.map(result => {
                 // Define the axis
                 val xAxis = new NumberAxis
+                xAxis.setLabel("Measurement")
                 val yAxis = new NumberAxis
                 yAxis.setForceZeroInRange(false)
 
                 // Define the chart
                 val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
-                lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + result.maxRangeMs + "ms") // Sensor name
+                lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + result.maxRangeMs + "ms; " + result.description) // Sensor name
                 lineChart.setCreateSymbols(false)
 
                 // Define series
@@ -155,7 +158,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                     else
                         lineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
                 })
-
 
                 // Set line style
                 series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")

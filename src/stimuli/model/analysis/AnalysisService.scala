@@ -67,7 +67,7 @@ class AnalysisService {
         val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes.distinct.sorted)
 
         // Return new SensorResult with recursion vector
-        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs)) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
+        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs, f"Mean: $mean%.3f; standard deviation: $stdDev%.7f")) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
     }
 
     private def analyseDataFramesHorWindow(data: Vector[Measurement], windowsMs: Double, windowSize: Int, probabilityTrigger: Double, mean: Double, stdDev: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
