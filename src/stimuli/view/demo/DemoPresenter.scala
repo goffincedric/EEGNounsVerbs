@@ -1,10 +1,16 @@
 package stimuli.view.demo
 
+import javafx.collections.transformation.FilteredList
 import javafx.scene.chart.{LineChart, NumberAxis, XYChart}
+import javafx.scene.control._
+import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.{Node, Parent, Scene}
+import javafx.stage.{Screen, Stage}
 import stimuli.model.Stimuli
+import stimuli.model.analysis.AnalysisService
 import stimuli.model.stimulus.Stimulus
-
-import scala.Numeric.Implicits._
+import stimuli.utils.customChart.LineChartWithMarkers
+import stimuli.view.chartAnalysis.{ChartAnalysisPresenter, ChartAnalysisView}
 
 /**
   * @author Cédric Goffin
@@ -12,7 +18,14 @@ import scala.Numeric.Implicits._
   *
   */
 class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) {
+    //TODO: Scherm maken waar opties ingesteld kunnen worden (standaardafwijking, grootte sliding window (1ste twee seconden = grootte * 10ms, laatste 2 secondsn = grootte * 100ms), ...
+    private val analysisService = new AnalysisService
+
+    // Add data to view
     model.stimuliMap.foreach(addDataPane)
+
+    // Add eventhandlers to tabs
+    addEventHandlers()
 
     private def addDataPane(stimuli: (String, (Vector[Stimulus], Vector[Stimulus]))): Unit = {
         // Create the graphs
@@ -20,12 +33,13 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             // Define the axis
             val xAxis = new NumberAxis
             val yAxis = new NumberAxis
+            yAxis.setForceZeroInRange(false)
 
             // Define the chart
-            val lineChart = new LineChart[Number, Number](xAxis, yAxis)
+            val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(stimulus.toString)
+            lineChart.setCreateSymbols(false)
 
-            var counter = 0
             for (contact_point <- stimulus.measurements) {
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -33,13 +47,14 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                 // Populate the series with data
                 for (measurement <- contact_point._2) {
                     series.setName(contact_point._1)
-                    series.getData.add(new XYChart.Data[Number, Number](counter, measurement.value))
-                    counter += 1
+                    series.getData.add(new XYChart.Data[Number, Number](contact_point._2.indexOf(measurement), measurement.value))
                 }
-                counter = 0
 
                 // Add series to chart
                 lineChart.getData.add(series)
+
+                // Set line style
+                series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
             }
 
             // Return tuple with word and corresponding linechart
@@ -47,21 +62,55 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
         }).toMap
 
         // Add new tab to view
-        val tab = demoView.addTab(stimuli._1, lineChartsMap)
-
-
+        demoView.addTab(stimuli._1, lineChartsMap)
     }
 
+    private def addEventHandlers(): Unit = {
+        demoView.getTabs.forEach(tab => {
+            val vbox = tab.getContent.asInstanceOf[ScrollPane].getContent.asInstanceOf[VBox]
+            val titledPanes = vbox.getChildren.toArray.toStream
+              .withFilter(node => node.isInstanceOf[TitledPane])
+              .map(node => node.asInstanceOf[TitledPane])
+              .toVector
 
-    private def mean[T: Numeric](xs: Iterable[T]): Double =
-        xs.sum.toDouble / xs.size
+            titledPanes.foreach(tp => {
+                val tpChildren = tp.getContent.asInstanceOf[VBox].getChildren.toArray
+                val buttons = tpChildren.toStream
+                  .withFilter(node => node.isInstanceOf[HBox])
+                  .map(node => node.asInstanceOf[HBox])
+                  .filter(hbox => hbox.getId.equals("buttonBox"))
+                  .toVector(0).getChildren
 
-    private def variance[T: Numeric](xs: Iterable[T]): Double = {
-        val avg = mean(xs)
+                buttons.forEach(button => button.setOnMouseClicked(_ => {
+                    val analysisText = tpChildren.toStream
+                      .withFilter(node => node.isInstanceOf[Label])
+                      .map(node => node.asInstanceOf[Label])
+                      .toVector(0)
 
-        xs.map(_.toDouble).map(a => math.pow(a - avg, 2)).sum / xs.size
+                    val buttonData = button.getUserData.asInstanceOf[(String, String)]
+
+
+                    //                    analysisText.setText("Baseline (mean): " + analysisService.calcBaseLine(model.stimuliMapUnsorted(tab.getText).map(stimulus => stimulus.))) // Gaat niet werken -> analysis text in nieuwe window openen met baseline per sensor per woord
+                    //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
+                    //                    alert.show()
+
+                    val chartAnalysisView = new ChartAnalysisView(String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2))
+                    new ChartAnalysisPresenter(model, buttonData._1, buttonData._2, chartAnalysisView)
+                    val newStage = new Stage()
+                    val newScene = new Scene(chartAnalysisView)
+                    newScene.getStylesheets.addAll(demoView.getScene.getStylesheets)
+                    newStage.setScene(newScene)
+                    newStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
+                    newStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
+                    newStage.setMaximized(true)
+                    newStage.toFront()
+                    newStage.show()
+                }))
+            })
+        })
     }
 
-    private def stdDev[T: Numeric](xs: Iterable[T]): Double =
-        math.sqrt(variance(xs))
+    private def getByUserData(parent: Parent, userData: Any): FilteredList[Node] = {
+        parent.getChildrenUnmodifiable.filtered(node => node.getUserData.equals(userData))
+    }
 }

@@ -17,16 +17,29 @@ object EEG {
 
 class EEG extends Application {
     override def start(primaryStage: Stage): Unit = {
-        val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv")
-        val demoview = new DemoView
-        val presenter = new DemoPresenter(model, demoview)
+        if (getParameters.getNamed.get("filesPath").isEmpty) {
+            System.err.println("No name argument 'filesPath' was given. Please use the argument --filesPath=<Path to data files>")
+            System.exit(1)
+        } else {
+            if (getParameters.getNamed.get("dataDelaysMS").isEmpty) {
+                System.err.println("No name argument 'dataDelaysMS' was given. Default delay of 7.8125ms will be used.")
+            }
+            val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv", getParameters.getNamed.get("dataDelaysMS").toDouble)
+            val demoview = new DemoView
+            val presenter = new DemoPresenter(model, demoview)
 
-        // Set up & show stage
-        primaryStage.setTitle("EEG")
-        primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
-        primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getHeight)
-        primaryStage.setScene(new Scene(demoview, 1200, 900))
-        primaryStage.toFront()
-        primaryStage.show()
+            // Set up & show stage
+            val scene = new Scene(demoview)
+            scene.getStylesheets.add("style/material-fx-v0_3.css")
+            scene.getStylesheets.add("style/materialfx-toggleswitch.css")
+//            scene.getStylesheets.add("style/Goliath.css")
+            primaryStage.setTitle("EEG")
+            primaryStage.setScene(scene)
+            primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
+            primaryStage.setHeight(Screen.getPrimary.getVisualBounds.getHeight)
+            primaryStage.setMaximized(true)
+            primaryStage.toFront()
+            primaryStage.show()
+        }
     }
 }

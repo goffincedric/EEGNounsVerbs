@@ -11,9 +11,13 @@ import scala.io.Source
   *         17/10/2018 16:14
   *
   */
-class Stimuli(path: String, endsWith: String) {
+class Stimuli(path: String, endsWith: String, hardcodedDelayMS: Double = 7.8125) {
     // Fill map with CSV data
-    val stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
+    private val _stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
+
+    def stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = _stimuliMap
+
+    def stimuliMapUnsorted: Map[String, Vector[Stimulus]] = stimuliMap.map(kvPair => kvPair._1 -> (kvPair._2._1 ++ kvPair._2._2))
 
     private def getListOfCSVFiles: List[File] = {
         val d = new File(path) // Get directory with csv files
@@ -45,52 +49,59 @@ class Stimuli(path: String, endsWith: String) {
         // Define contact points array and their respective column index
         val headerLine = lines.head
         val contact_points = Array("AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2", "P8", "T8", "FC6", "F4", "F8", "AF4").map(col => (col, getColumnIndex(headerLine, "\t", col)))
-        val timestamp_col = getColumnIndex(headerLine, "\t", "TIMESTAMP")
 
         // Convert lines to Stimulus objects and return sorted by StimulusType
-        splitNounsVerbs(linesToStimuli(lines.tail, contact_points, timestamp_col, Vector.empty, Vector.empty))
+        splitNounsVerbs(linesToStimuli(lines.tail, contact_points))
     }
 
     private def getColumnIndex(headerLine: String, delimiter: String, column: String): Int = {
         headerLine.split(delimiter).map(_.trim).indexOf(column)
     }
 
-    private def linesToStimuli(lines: Vector[String], contact_points: Array[(String, Int)], timestamp_col: Int, stimulusLines: Vector[String], stimuliVector: Vector[Stimulus]): Vector[Stimulus] = {
-        if (lines.isEmpty) // If no lines left to convert
+    private def linesToStimuli(lines: Vector[String], contact_points: Array[(String, Int)], stimulusLines: Vector[String] = Vector.empty, stimuliVector: Vector[Stimulus] = Vector.empty): Vector[Stimulus] = {
+        if (lines.isEmpty && stimulusLines.isEmpty) // If no lines left to convert
             stimuliVector // Return vector with stimulus objects
         else {
             // Get first line
-            val cols = lines.head.split("\t").map(_.trim)
-            if (stimulusLines.nonEmpty && cols(0).equalsIgnoreCase("stimulus")) { // Check if first line contains stimulus word
+            val cols: Array[String] =
+                if (lines.nonEmpty)
+                    lines.head.split("\t").map(_.trim)
+                else
+                    Array.empty[String]
+            if (stimulusLines.nonEmpty && (lines.isEmpty || cols(0).equalsIgnoreCase("stimulus"))) { // Check if first line contains stimulus word
                 // Get first line from stimulusLines
                 val firstLine = stimulusLines.head.split("\t").map(_.trim)
                 // Convert to stimulus object
-                val stimulus = Vector(new Stimulus(
+                val stimulus = new Stimulus(
                     StimulusType.getType(firstLine(1)),
                     firstLine(1),
-                    linesToMeasurements(stimulusLines.tail, contact_points, timestamp_col)
-                ))
-                // Recursive call to self with newly converted stimulus
-                linesToStimuli(lines.tail, contact_points, timestamp_col, Vector(lines.head), stimuliVector ++ stimulus)
+                    linesToMeasurements(stimulusLines.tail, contact_points)
+                )
+
+                if (lines.isEmpty) stimuliVector :+ stimulus
+                else {
+                    // Recursive call to self with newly converted stimulus
+                    linesToStimuli(lines.tail, contact_points, Vector(lines.head), stimuliVector :+ stimulus)
+                }
             } else {
                 // Recursive call to self
-                linesToStimuli(lines.tail, contact_points, timestamp_col, stimulusLines :+ lines.head, stimuliVector)
+                linesToStimuli(lines.tail, contact_points, stimulusLines :+ lines.head, stimuliVector)
             }
         }
     }
 
-    private def linesToMeasurements(lines: Vector[String], contact_points: Array[(String, Int)], timestamp_col: Int): Map[String, Vector[Measurement]] = {
+    private def linesToMeasurements(lines: Vector[String], contact_points: Array[(String, Int)]): Map[String, Vector[Measurement]] = {
         // Convert lines to measurements and group by contact point
-        lines.flatMap(line => lineToMeasurements(line, contact_points, timestamp_col))
+        lines.flatMap(line => lineToMeasurements(line, contact_points))
           .groupBy(_._1) // Group measurements by contact point
           .mapValues(_.map(_._2)) // Map grouped measurements to map
           .map(meting => (meting._1, cleanupData(meting._2, 5))) // Cleanup dirty measurements
     }
 
-    private def lineToMeasurements(line: String, contact_points: Array[(String, Int)], timestamp_col: Int): Map[String, Measurement] = {
+    private def lineToMeasurements(line: String, contact_points: Array[(String, Int)]): Map[String, Measurement] = {
         // Convert line to measurement
         val cols = line.split("\t").map(_.trim)
-        contact_points.map(cp => cp._1 -> new Measurement(cols(cp._2).toDouble, cols(timestamp_col).toDouble)).toMap
+        contact_points.map(cp => cp._1 -> new Measurement(cols(cp._2).toDouble, hardcodedDelayMS)).toMap
     }
 
     private def splitNounsVerbs(stimuli: Vector[Stimulus]): (Vector[Stimulus], Vector[Stimulus]) = {
