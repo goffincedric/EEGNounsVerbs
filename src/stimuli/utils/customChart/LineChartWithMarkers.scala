@@ -52,7 +52,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
                 marker.setNode(null)
             }
         })
-        _horizontalMarkers.clear()
+        _horizontalMarkers.removeAll(_horizontalMarkers)
     }
 
     def addVerticalValueMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -80,7 +80,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
                 marker.setNode(null)
             }
         })
-        _verticalMarkers.clear()
+        _verticalMarkers.removeAll(_verticalMarkers)
     }
 
     def addVerticalRangeMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -110,7 +110,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
                 marker.setNode(null)
             }
         })
-        _verticalRangeMarkers.clear()
+        _verticalRangeMarkers.removeAll(_verticalRangeMarkers)
     }
 
     def removeAllMarkers(): Unit = {

@@ -124,6 +124,8 @@ class ChartAnalysisView(title: String) extends ScrollPane {
             // Add TitledPane to root vbox
             container.getChildren.add(tp)
         })
+
+        forceUpdate()
     }
 
     def getChartsFromContainer(container: VBox): Map[String, Vector[LineChartWithMarkers[Number, Number]]] = {
@@ -132,5 +134,10 @@ class ChartAnalysisView(title: String) extends ScrollPane {
           .map(tp => tp.getText.replace("Sensor: ", "") -> tp.getContent.asInstanceOf[VBox].getChildren.toArray.toVector
             .filter(n => n.isInstanceOf[LineChartWithMarkers[Number, Number]]).map(n => n.asInstanceOf[LineChartWithMarkers[Number, Number]])
           ).toMap
+    }
+
+    def forceUpdate(): Unit = {
+        this.setVisible(false)
+        this.setVisible(true)
     }
 }

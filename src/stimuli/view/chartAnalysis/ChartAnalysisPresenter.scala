@@ -174,6 +174,8 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
 
         markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+
+
     }
 
     private def analyseSensorGraphsNormalDist(sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
