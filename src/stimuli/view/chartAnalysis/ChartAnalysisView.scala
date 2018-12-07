@@ -15,6 +15,10 @@ import stimuli.utils.customChart.LineChartWithMarkers
   */
 class ChartAnalysisView(title: String) extends ScrollPane {
     /* Top */
+    // Toolbar
+    val optionsMenuItem = new Menu("", new Label("Edit analysis options"))
+    val menubar = new MenuBar()
+
     // Title label
     val lblTitle = new Label(title)
     // Controls & conainer HBox
@@ -48,7 +52,7 @@ class ChartAnalysisView(title: String) extends ScrollPane {
 
     // Root borderpane
     val root = new BorderPane()
-    val topVBox = new VBox(lblTitle, buttonbar)
+    val topVBox = new VBox(menubar, lblTitle, buttonbar)
     val centerHbox = new VBox(fullLineChart, separator, tpContainer)
 
     layoutNodes()
@@ -60,6 +64,10 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         this.getStyleClass.add("edge-to-edge")
 
         // Layout Top
+        /* Menubar */
+        menubar.getMenus.add(optionsMenuItem)
+        menubar.setStyle("-fx-padding: 1 1 1 1; -fx-min-height: 0;")
+
         /* Title lable */
         lblTitle.setPadding(new Insets(10))
         lblTitle.setMaxWidth(Double.MaxValue)
@@ -81,7 +89,6 @@ class ChartAnalysisView(title: String) extends ScrollPane {
 
         // Layout Center
         /* Linechart */
-        fullLineChart.setCreateSymbols(false)
         fullLineChart.setPadding(new Insets(10))
         xAxis.setLabel("Measurement")
         yAxis.setForceZeroInRange(false)

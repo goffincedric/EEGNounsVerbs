@@ -1,8 +1,8 @@
-package stimuli.model.analysis
+package stimuli.services.analysis
 
 import org.apache.commons.math3.distribution.NormalDistribution
-import stimuli.model.analysis.result.{AnalysisResult, SensorResult}
-import stimuli.model.stimulus.{Measurement, Stimulus}
+import stimuli.model.analysis.SensorResult
+import stimuli.model.stimulus.Measurement
 
 import scala.Numeric.Implicits._
 
@@ -15,12 +15,6 @@ class AnalysisService {
     def calcBaseLine(measurements: Vector[Double]): Double = calcMean(measurements)
 
     def calcStandardDeviation(measurements: Vector[Double]): Double = calcStdDev(measurements)
-
-    def analyseStimulus(stimulus: Stimulus, windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): AnalysisResult = {
-        val word = stimulus.word
-        val sensorResults = stimulus.measurements.map(analyseNormalDist(_, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo)).toVector
-        new AnalysisResult(stimulus, sensorResults)
-    }
 
     def mergeSensorResultsResults(sensorResults: Iterable[SensorResult]): SensorResult = {
         // Merge all SensorResult indexes

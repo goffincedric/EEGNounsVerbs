@@ -1,12 +1,17 @@
 package stimuli.view.chartAnalysis
 
 import javafx.collections.ListChangeListener
+import javafx.event.{ActionEvent, EventHandler}
+import javafx.scene.Scene
 import javafx.scene.chart.{NumberAxis, XYChart}
 import javafx.scene.control.TitledPane
+import javafx.scene.input.MouseEvent
+import javafx.stage.{Modality, Screen, Stage}
 import stimuli.model.Stimuli
-import stimuli.model.analysis.result.SensorResult
-import stimuli.model.analysis.{AnalysisService, AnalysisType}
+import stimuli.model.analysis.{AnalysisType, SensorResult}
+import stimuli.services.analysis.AnalysisService
 import stimuli.utils.customChart.LineChartWithMarkers
+import stimuli.view.options.{OptionsPresenter, OptionsView}
 
 /**
   * @author Cédric Goffin
@@ -33,7 +38,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Populate the series with data
             for (measurement <- cp._2) {
                 series.setName(cp._1)
-                series.getData.add(new XYChart.Data[Number, Number](cp._2.indexOf(measurement), measurement.value))
+                series.getData.add(new XYChart.Data[Number, Number](cp._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
             }
 
             // Add series to chart
@@ -55,7 +60,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Define the chart
                 val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
                 lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + range + "ms") // Sensor name
-                lineChart.setCreateSymbols(false)
 
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -63,7 +67,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
                 analysisService.getFirstWindow(sensorMeasurements._2, range).foreach(measurement => {
                     // Populate the series with data
-                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
                 lineChart.getData.add(series)
 
@@ -91,7 +95,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Define the chart
             val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(sensorMeasurements._1) // Sensor name
-            lineChart.setCreateSymbols(false)
 
             // Define series
             val series = new XYChart.Series[Number, Number]
@@ -99,7 +102,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
             sensorMeasurements._2.foreach(measurement => {
                 // Populate the series with data
-                series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
             })
             lineChart.getData.add(series)
 
@@ -134,7 +137,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Define the chart
                 val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
                 lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + result.maxRangeMs + "ms; " + result.description) // Sensor name
-                lineChart.setCreateSymbols(false)
 
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -142,7 +144,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
                 analysisService.getFirstWindow(sensorMeasurements._2, result.maxRangeMs).foreach(measurement => {
                     // Populate the series with data
-                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
                 lineChart.getData.add(series)
 
@@ -154,9 +156,9 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Add vertical value markers
                 result.verticalMarkers.foreach(range => {
                     if (range._1 == range._2)
-                        lineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
+                        lineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
                     else
-                        lineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
+                        lineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
                 })
 
                 // Set line style
@@ -199,9 +201,9 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Add value markers for sensorResults
             sensorResult.verticalMarkers.foreach(range => {
                 if (range._1 == range._2)
-                    sensorChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
+                    sensorChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
                 else
-                    sensorChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
+                    sensorChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
             })
 
             // return sensor result
@@ -221,9 +223,9 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         // Vertical markers
         unifiedSensorResult.verticalMarkers.foreach(range => {
             if (range._1 == range._2)
-                chartAnalysisView.fullLineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
+                chartAnalysisView.fullLineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
             else
-                chartAnalysisView.fullLineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
+                chartAnalysisView.fullLineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
         })
     }
 
@@ -241,6 +243,20 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     }
 
     private def addEventHandlers(): Unit = {
+        chartAnalysisView.optionsMenuItem.getGraphic.setOnMouseClicked((event: MouseEvent) => {
+            val optionsView = new OptionsView
+            new OptionsPresenter(model, optionsView)
+            val newStage = new Stage()
+            newStage.initModality(Modality.APPLICATION_MODAL)
+            val newScene = new Scene(optionsView)
+            newScene.getStylesheets.addAll(chartAnalysisView.getScene.getStylesheets)
+            newStage.setScene(newScene)
+            newStage.setWidth(400)
+            newStage.setHeight(400)
+            newStage.toFront()
+            newStage.show()
+        })
+
         chartAnalysisView.cmbAnalysisChoice.getSelectionModel.selectedItemProperty().addListener((options, oldValue, newValue) => {
             AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
                 case AnalysisType.HORIZONTAL_SLIDING_WINDOW | AnalysisType.VERTICAL_SLIDING_WINDOW =>

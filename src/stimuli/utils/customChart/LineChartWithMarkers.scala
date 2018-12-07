@@ -14,12 +14,14 @@ import javafx.scene.shape.{Line, Rectangle}
   */
 class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends LineChart[X, Y](xAxis, yAxis) {
     private val _horizontalMarkers = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
-    _horizontalMarkers.addListener(_ => layoutPlotChildren())
     private val _verticalMarkers = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
-    _verticalMarkers.addListener(_ => layoutPlotChildren())
-
     private val _verticalRangeMarkers = FXCollections.observableArrayList[XYChart.Data[X, Y]]()
-    _verticalMarkers.addListener(_ => layoutPlotChildren())
+
+    initDefaultStyle()
+
+    private def initDefaultStyle(): Unit = {
+        this.setCreateSymbols(false)
+    }
 
     def getHorizontalValueMarkers: ObservableList[XYChart.Data[X, Y]] = this._horizontalMarkers
 
@@ -34,6 +36,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         marker.setNode(line)
         getPlotChildren.add(line)
         _horizontalMarkers.add(marker)
+        layoutPlotChildren()
     }
 
     def removeHorizontalValueMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -43,6 +46,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             marker.setNode(null)
         }
         _horizontalMarkers.remove(marker)
+        layoutPlotChildren()
     }
 
     def removeAllHorizontalValueMarkers(): Unit = {
@@ -53,6 +57,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             }
         })
         _horizontalMarkers.removeAll(_horizontalMarkers)
+        layoutPlotChildren()
     }
 
     def addVerticalValueMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -62,6 +67,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         marker.setNode(line)
         getPlotChildren.add(line)
         _verticalMarkers.add(marker)
+        layoutPlotChildren()
     }
 
     def removeVerticalValueMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -71,6 +77,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             marker.setNode(null)
         }
         _verticalMarkers.remove(marker)
+        layoutPlotChildren()
     }
 
     def removeAllVerticalValueMarkers(): Unit = {
@@ -81,6 +88,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             }
         })
         _verticalMarkers.removeAll(_verticalMarkers)
+        layoutPlotChildren()
     }
 
     def addVerticalRangeMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -92,6 +100,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         marker.setNode(rectangle)
         getPlotChildren.add(rectangle)
         _verticalRangeMarkers.add(marker)
+        layoutPlotChildren()
     }
 
     def removeVerticalRangeMarker(marker: XYChart.Data[X, Y]): Unit = {
@@ -101,6 +110,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             marker.setNode(null)
         }
         _verticalRangeMarkers.remove(marker)
+        layoutPlotChildren()
     }
 
     def removeAllVerticalRangeMarkers(): Unit = {
@@ -111,6 +121,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
             }
         })
         _verticalRangeMarkers.removeAll(_verticalRangeMarkers)
+        layoutPlotChildren()
     }
 
     def removeAllMarkers(): Unit = {
