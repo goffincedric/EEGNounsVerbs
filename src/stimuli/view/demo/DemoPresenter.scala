@@ -87,11 +87,12 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                       .toVector(0)
 
                     val buttonData = button.getUserData.asInstanceOf[(String, String)]
-
-                    val chartAnalysisView = new ChartAnalysisView(String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2))
+                    val title = String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2)
+                    val chartAnalysisView = new ChartAnalysisView(title)
                     new ChartAnalysisPresenter(model, buttonData._1, buttonData._2, chartAnalysisView)
                     val newStage = new Stage()
                     val newScene = new Scene(chartAnalysisView)
+                    newStage.setTitle(title)
                     newScene.getStylesheets.addAll(demoView.getScene.getStylesheets)
                     newStage.setScene(newScene)
                     newStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)

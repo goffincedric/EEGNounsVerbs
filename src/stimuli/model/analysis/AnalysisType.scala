@@ -8,7 +8,6 @@ package stimuli.model.analysis
 object AnalysisType extends Enumeration {
     type AnalysisType = Value
     val HORIZONTAL_SLIDING_WINDOW: AnalysisType.Value = Value("Horizontal sliding window")
-    val VERTICAL_SLIDING_WINDOW: AnalysisType.Value = Value("Vertical sliding window")
     val NORMAL_DISTRIBUTION: AnalysisType.Value = Value("Normal distribution")
     val DIFFERENTIAL_NORMAL_DISTRIBUTION: AnalysisType.Value = Value("Differential normal distribution")
 }

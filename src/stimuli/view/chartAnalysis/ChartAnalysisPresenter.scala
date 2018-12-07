@@ -1,12 +1,11 @@
 package stimuli.view.chartAnalysis
 
 import javafx.collections.ListChangeListener
-import javafx.event.{ActionEvent, EventHandler}
 import javafx.scene.Scene
 import javafx.scene.chart.{NumberAxis, XYChart}
 import javafx.scene.control.TitledPane
 import javafx.scene.input.MouseEvent
-import javafx.stage.{Modality, Screen, Stage}
+import javafx.stage.{Modality, Stage}
 import stimuli.model.Stimuli
 import stimuli.model.analysis.{AnalysisType, SensorResult}
 import stimuli.services.analysis.AnalysisService
@@ -233,8 +232,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
             case AnalysisType.HORIZONTAL_SLIDING_WINDOW =>
                 analyseSensorGraphsHorSlidingWindow
-            case AnalysisType.VERTICAL_SLIDING_WINDOW => //TODO
-                analyseSensorGraphsHorSlidingWindow
             case AnalysisType.NORMAL_DISTRIBUTION =>
                 analyseSensorGraphsNormalDist
             case AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION => //TODO
@@ -244,22 +241,20 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
     private def addEventHandlers(): Unit = {
         chartAnalysisView.optionsMenuItem.getGraphic.setOnMouseClicked((event: MouseEvent) => {
-            val optionsView = new OptionsView
+            val optionsView = new OptionsView("Options Analysis")
             new OptionsPresenter(model, optionsView)
             val newStage = new Stage()
             newStage.initModality(Modality.APPLICATION_MODAL)
             val newScene = new Scene(optionsView)
             newScene.getStylesheets.addAll(chartAnalysisView.getScene.getStylesheets)
             newStage.setScene(newScene)
-            newStage.setWidth(400)
-            newStage.setHeight(400)
             newStage.toFront()
             newStage.show()
         })
 
         chartAnalysisView.cmbAnalysisChoice.getSelectionModel.selectedItemProperty().addListener((options, oldValue, newValue) => {
             AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
-                case AnalysisType.HORIZONTAL_SLIDING_WINDOW | AnalysisType.VERTICAL_SLIDING_WINDOW =>
+                case AnalysisType.HORIZONTAL_SLIDING_WINDOW =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerSlidingWindow)
                 case AnalysisType.NORMAL_DISTRIBUTION | AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerNormal)
