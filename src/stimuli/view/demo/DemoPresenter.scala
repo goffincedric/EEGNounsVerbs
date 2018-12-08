@@ -104,8 +104,4 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             })
         })
     }
-
-    private def getByUserData(parent: Parent, userData: Any): FilteredList[Node] = {
-        parent.getChildrenUnmodifiable.filtered(node => node.getUserData.equals(userData))
-    }
 }

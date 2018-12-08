@@ -35,7 +35,7 @@ class AnalysisService {
         new SensorResult("Overview", mergedIndexes)
     }
 
-    def analyseHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double, maxRangeMS: Double = 4000, rangeStepMs: Double = 1000, counter: Int = 1): Vector[SensorResult] = {
+    def analyseHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double,windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double, maxRangeMS: Double = 4000, rangeStepMs: Double = 1000, counter: Int = 1): Vector[SensorResult] = {
         // Recursion check
         if (counter * rangeStepMs > maxRangeMS) {
             // Return sensorResult vector
@@ -45,7 +45,7 @@ class AnalysisService {
         // Get range from sensorMeasurements
         val range = getFirstWindow(sensorMeasurements._2, counter * rangeStepMs)
         // Split dataset in first and last part
-        val datasets = splitDataset(range, 2000)
+        val datasets = splitDataset(range, splitPointMs)
 
         // Calc mean and stdDev
         val mean = calcMean(range.map(m => m.value))
@@ -61,7 +61,7 @@ class AnalysisService {
         val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes.distinct.sorted)
 
         // Return new SensorResult with recursion vector
-        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs, f"Mean: $mean%.3f; standard deviation: $stdDev%.7f")) ++ analyseHorizontalSlidingWindow(sensorMeasurements, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
+        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs, f"Mean: $mean%.3f; standard deviation: $stdDev%.7f")) ++ analyseHorizontalSlidingWindow(sensorMeasurements, splitPointMs,windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
     }
 
     private def analyseDataFramesHorWindow(data: Vector[Measurement], windowsMs: Double, windowSize: Int, probabilityTrigger: Double, mean: Double, stdDev: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
@@ -100,9 +100,9 @@ class AnalysisService {
         }
     }
 
-    def analyseNormalDist(sensorMeasurements: (String, Vector[Measurement]), windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
+    def analyseNormalDist(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double , windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
         // Data opdelen in eerste 2 en laatste 2 seconden
-        val datasets = splitDataset(sensorMeasurements._2, 2000)
+        val datasets = splitDataset(sensorMeasurements._2, splitPointMs)
 
         // Gemiddelde berekenen
         val mean = calcMean(sensorMeasurements._2.map(m => m.value))
@@ -114,7 +114,7 @@ class AnalysisService {
         // Get differences in following measurements
         val measurementDiffs = (calcDifferences(datasets._1), calcDifferences(datasets._2))
 
-        val remarkableNormalDistIndexes = analyseDataFramesNormalDist(datasets._1, normalDist, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, 0) ++ analyseDataFramesNormalDist(datasets._2, normalDist, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, indexOffset = datasets._1.size)
+        val remarkableNormalDistIndexes = analyseDataFramesNormalDist(datasets._1, normalDist, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne) ++ analyseDataFramesNormalDist(datasets._2, normalDist, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, indexOffset = datasets._1.size)
 
         // stdDev (standard deviance ( standaard afwijking)) vragen via parameter
         val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableNormalDistIndexes.distinct.sorted)
@@ -122,7 +122,7 @@ class AnalysisService {
         new SensorResult(sensorMeasurements._1, remarkableIndexes)
     }
 
-    private def analyseDataFramesNormalDist(data: Vector[Measurement], normalDistribution: NormalDistribution, windowsMs: Double, windowSize: Int, probabilityTrigger: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
+    private def analyseDataFramesNormalDist(data: Vector[Measurement], normalDistribution: NormalDistribution, windowsMs: Double, windowSize: Int, probabilityTrigger: Double, indexOffset: Int = 0, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
         if (data.length < windowSize) {
             resultsMeasurementList.map(m => origData.indexOf(m) + indexOffset)
         } else {

@@ -158,16 +158,16 @@
     -fx-text-fill: -fx-text-button-colored;
 }
 
-.toggle-button:focused, .button:focused, .button:default:focused {
-    -fx-background-color: -swatch-light-grey;
-}
+/*.toggle-button:focused, .button:focused, .button:default:focused {*/
+    /*-fx-background-color: -swatch-light-grey;*/
+/*}*/
 
-.toggle-button:focused:selected {
-    -fx-background-color: derive(-swatch-500, 50.0%),
-    derive(-swatch-500, -20.0%);
-    -fx-background-insets: 0.0, 0.2em;
-    -fx-text-fill: -fx-text-button-colored;
-}
+/*.toggle-button:focused:selected {*/
+    /*-fx-background-color: derive(-swatch-500, 50.0%),*/
+    /*derive(-swatch-500, -20.0%);*/
+    /*-fx-background-insets: 0.0, 0.2em;*/
+    /*-fx-text-fill: -fx-text-button-colored;*/
+/*}*/
 
 .toggle-button:armed, .toggle-button:selected, .button:armed, .button:default:armed {
     -fx-background-color: -swatch-grey;

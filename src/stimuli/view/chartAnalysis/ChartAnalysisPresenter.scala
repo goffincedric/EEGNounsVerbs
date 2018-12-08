@@ -9,6 +9,7 @@ import javafx.stage.{Modality, Stage}
 import stimuli.model.Stimuli
 import stimuli.model.analysis.{AnalysisType, SensorResult}
 import stimuli.services.analysis.AnalysisService
+import stimuli.services.options.OptionsService
 import stimuli.utils.customChart.LineChartWithMarkers
 import stimuli.view.options.{OptionsPresenter, OptionsView}
 
@@ -19,6 +20,7 @@ import stimuli.view.options.{OptionsPresenter, OptionsView}
   */
 class ChartAnalysisPresenter(private val model: Stimuli, private val name: String, private val word: String, private val chartAnalysisView: ChartAnalysisView) {
     private val analysisService = new AnalysisService
+    private val optionsService = new OptionsService(model.optionsFilePath)
     private val stimulus = model.stimuliMapUnsorted(name).filter(s => s.word.equals(word)).head
 
     // Split stimulus sensor data
@@ -120,10 +122,20 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     }
 
     private def analyseSensorGraphsHorSlidingWindow(sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
+        // Get options
+        val options = optionsService.getOptions
+        val rangeSizeIncrement = options.filter(o => o.name.equals("SlidingRangeSizeIncrement")).head
+        val maxRangeSize = options.filter(o => o.name.equals("SlidingMaxRangeSize")).head
+        val splitPointMs = options.filter(o => o.name.equals("SlidingSplitPointMs")).head
+        val windowOneMs = options.filter(o => o.name.equals("SlidingWindowOneMs")).head
+        val sizeWindowOne = options.filter(o => o.name.equals("SlidingSizeWindowOne")).head
+        val windowTwoMs = options.filter(o => o.name.equals("SlidingWindowTwoMs")).head
+        val sizeWindowTwo = options.filter(o => o.name.equals("SlidingSizeWindowTwo")).head
+
         // Map of sensorResults and Charts
         val sensorResultsMap = stimulus.measurements.map(sensorMeasurements => {
             // Analyse chart
-            val results = analysisService.analyseHorizontalSlidingWindow(sensorMeasurements, 10, sizeWindowOne, 0.95, 100, sizeWindowTwo, 0.97)
+            val results = analysisService.analyseHorizontalSlidingWindow(sensorMeasurements, splitPointMs.value.toDouble, windowOneMs.value.toDouble, sizeWindowOne.value.toInt, 0.95, windowTwoMs.value.toDouble, sizeWindowTwo.value.toInt, 0.97, maxRangeSize.value.toDouble, rangeSizeIncrement.value.toDouble)
 
             // Create sliding window graphs
             val linecharts = results.map(result => {
@@ -171,45 +183,74 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             (results, sensorMeasurements._1 -> linecharts)
         }).toVector
 
-        // Add charts to container
-        chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
+        // Collect all old sensor charts and map to respective animation
+        val lineChartAnimations = chartAnalysisView.getChartsFromContainer(chartAnalysisView.titledPaneContainerSlidingWindow).values.flatten.map(lc => lc.getAnimation(() => ())).toVector
+        val fullLineChartAnimation =
+            chartAnalysisView.fullLineChart.getAnimation(() => {
+                // Add charts to container
+                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
 
-        markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+                // Mark full graph
+                markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+            })
 
-
+        // Concat animations and play
+        (lineChartAnimations :+ fullLineChartAnimation).foreach(animation => animation.play())
     }
 
     private def analyseSensorGraphsNormalDist(sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
+        // Get options
+        val options = optionsService.getOptions
+        val splitPointMs = options.filter(o => o.name.equals("NormalDistSplitPointMs")).head
+        val windowOneMs = options.filter(o => o.name.equals("NormalDistWindowOneMs")).head
+        val sizeWindowOne = options.filter(o => o.name.equals("NormalDistSizeWindowOne")).head
+        val probTriggerWindowOne = options.filter(o => o.name.equals("NormalDistProbTriggerWindowOne")).head
+        val windowTwoMs = options.filter(o => o.name.equals("NormalDistWindowTwoMs")).head
+        val sizeWindowTwo = options.filter(o => o.name.equals("NormalDistSizeWindowTwo")).head
+        val probTriggerWindowTwo = options.filter(o => o.name.equals("NormalDistProbTriggerWindowTwo")).head
+
         // Sensor charts
         val sensorChartsMap: Map[String, Vector[LineChartWithMarkers[Number, Number]]] = chartAnalysisView.getChartsFromContainer(chartAnalysisView.titledPaneContainerNormal)
 
         // Modify sensorGraphs
-        val sensorResults = stimulus.measurements.map(sensorMeasurements => {
+        val sensorResultsChartMap = stimulus.measurements.map(sensorMeasurements => {
             // Analyse chart
             val baseLine = analysisService.calcBaseLine(sensorMeasurements._2.map(m => m.value))
-            val sensorResult = analysisService.analyseNormalDist(sensorMeasurements, 10, sizeWindowOne, 0.95, 100, sizeWindowTwo, 0.97)
+            val sensorResult = analysisService.analyseNormalDist(sensorMeasurements, splitPointMs.value.toDouble, windowOneMs.value.toDouble, sizeWindowOne.value.toInt, probTriggerWindowOne.value.toDouble, windowTwoMs.value.toDouble, sizeWindowTwo.value.toInt, probTriggerWindowTwo.value.toDouble)
 
             // Define the chart
             val sensorChart = sensorChartsMap(sensorMeasurements._1).head
             // Clear chart of previous analyses
             sensorChart.removeAllMarkers()
 
-            // Add value marker for baseline
-            sensorChart.addHorizontalValueMarker(new XYChart.Data[Number, Number](0, baseLine))
-
-            // Add value markers for sensorResults
-            sensorResult.verticalMarkers.foreach(range => {
-                if (range._1 == range._2)
-                    sensorChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
-                else
-                    sensorChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
-            })
-
             // return sensor result
-            sensorResult
+            (sensorResult, baseLine) -> sensorChart
         })
 
-        markFullGraph(sensorResults)
+        // Collect all old sensor charts and map to respective animation
+        val lineChartAnimations = sensorChartsMap.values.flatten.map(lc => lc.getAnimation(() => ())).toVector
+        val fullLineChartAnimation =
+            chartAnalysisView.fullLineChart.getAnimation(() => {
+                // Mark sensorCharts
+                sensorResultsChartMap.foreach(pair => {
+                    // Add value marker for baseline
+                    pair._2.addHorizontalValueMarker(new XYChart.Data[Number, Number](0, pair._1._2))
+
+                    // Add value markers for sensorResults
+                    pair._1._1.verticalMarkers.foreach(range => {
+                        if (range._1 == range._2)
+                            pair._2.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
+                        else
+                            pair._2.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
+                    })
+                })
+
+                // Mark full graph
+                markFullGraph(sensorResultsChartMap.keys.map(pair => pair._1))
+            })
+
+        // Concat animations and play
+        (lineChartAnimations :+ fullLineChartAnimation).foreach(animation => animation.play())
     }
 
     private def markFullGraph(sensorResults: Iterable[SensorResult]): Unit = {
@@ -349,6 +390,4 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             }
         })
     }
-
-
 }

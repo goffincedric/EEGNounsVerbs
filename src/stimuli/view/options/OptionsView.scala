@@ -1,8 +1,8 @@
 package stimuli.view.options
 
 import javafx.geometry.{Insets, Pos}
-import javafx.scene.control.{Label, ScrollPane, TextField}
-import javafx.scene.layout.{BorderPane, GridPane, VBox}
+import javafx.scene.control.{Button, Label, ScrollPane, TextField}
+import javafx.scene.layout.{BorderPane, GridPane, HBox, VBox}
 
 /**
   * @author Cédric Goffin
@@ -21,11 +21,11 @@ class OptionsView(private val title: String) extends ScrollPane {
     val lblSlidingWindowAnalysisTitle = new Label("1) Sliding window analysis options")
     val slidingWindowOptionsPane = new GridPane
     // Range options
-    val lblRangeOptions = new Label("Range options:")
-    val lblRangeSizeIncrement = new Label("Range size increment step in millis:")
-    val txtRangeSizeIncrement = new TextField()
-    val lblMaxRangeSize = new Label("Max range size in millis:")
-    val txtMaxRangeSize = new TextField()
+    val lblSlidingRangeOptions = new Label("Range options:")
+    val lblSlidingRangeSizeIncrement = new Label("Range size increment step in millis:")
+    val txtSlidingRangeSizeIncrement = new TextField()
+    val lblSlidingMaxRangeSize = new Label("Max range size in millis:")
+    val txtSlidingMaxRangeSize = new TextField()
     // Sliding window options
     val lblSlidingWindowOptions = new Label("Sliding window options:")
     val lblSlidingSplitPointMs = new Label("Splitting point in millis:")
@@ -62,31 +62,48 @@ class OptionsView(private val title: String) extends ScrollPane {
     val lblNormalDistProbTriggerWindowTwo = new Label("Probability trigger sliding window one:")
     val txtNormalDistProbTriggerWindowTwo = new TextField()
 
+    // Save button
+    val btnSave = new Button("Save options")
+
     this.layoutNodes()
 
     private def layoutNodes(): Unit = {
         // Sliding Window Pane
         addTitleToGridPane(slidingWindowOptionsPane, lblSlidingWindowAnalysisTitle, 20, border = true)
-        addTitleToGridPane(slidingWindowOptionsPane, lblRangeOptions, 16)
-        addOptionToGridPane(slidingWindowOptionsPane, lblRangeSizeIncrement, txtRangeSizeIncrement)
-        addOptionToGridPane(slidingWindowOptionsPane, lblMaxRangeSize, txtMaxRangeSize)
+        addTitleToGridPane(slidingWindowOptionsPane, lblSlidingRangeOptions, 16)
+        addOptionToGridPane(slidingWindowOptionsPane, lblSlidingRangeSizeIncrement, txtSlidingRangeSizeIncrement)
+        txtSlidingRangeSizeIncrement.setUserData("SlidingRangeSizeIncrement")
+        addOptionToGridPane(slidingWindowOptionsPane, lblSlidingMaxRangeSize, txtSlidingMaxRangeSize)
+        txtSlidingMaxRangeSize.setUserData("SlidingMaxRangeSize")
         addTitleToGridPane(slidingWindowOptionsPane, lblSlidingWindowOptions, 16)
         addOptionToGridPane(slidingWindowOptionsPane, lblSlidingSplitPointMs, txtSlidingSplitPointMs)
+        txtSlidingSplitPointMs.setUserData("SlidingSplitPointMs")
         addOptionToGridPane(slidingWindowOptionsPane, lblSlidingWindowOneMs, txtSlidingWindowOneMs)
+        txtSlidingWindowOneMs.setUserData("SlidingWindowOneMs")
         addOptionToGridPane(slidingWindowOptionsPane, lblSlidingSizeWindowOne, txtSlidingSizeWindowOne)
+        txtSlidingSizeWindowOne.setUserData("SlidingSizeWindowOne")
         addOptionToGridPane(slidingWindowOptionsPane, lblSlidingWindowTwoMs, txtSlidingWindowTwoMs)
+        txtSlidingWindowTwoMs.setUserData("SlidingWindowTwoMs")
         addOptionToGridPane(slidingWindowOptionsPane, lblSlidingSizeWindowTwo, txtSlidingSizeWindowTwo)
+        txtSlidingSizeWindowTwo.setUserData("SlidingSizeWindowTwo")
 
         // Normal Distribution Pane
         addTitleToGridPane(normalDistOptionsPane, lblNormalDistAnalysisTitle, 20, border = true)
         addTitleToGridPane(normalDistOptionsPane, lblNormalDistWindowOptions, 16)
         addOptionToGridPane(normalDistOptionsPane, lblNormalDistSplitPointMs, txtNormalDistSplitPointMs)
+        txtNormalDistSplitPointMs.setUserData("NormalDistSplitPointMs")
         addOptionToGridPane(normalDistOptionsPane, lblNormalDistWindowOneMs, txtNormalDistWindowOneMs)
-        addOptionToGridPane(normalDistOptionsPane, lblNormalDistProbTriggerWindowOne, txtNormalDistProbTriggerWindowOne)
+        txtNormalDistWindowOneMs.setUserData("NormalDistWindowOneMs")
         addOptionToGridPane(normalDistOptionsPane, lblNormalDistSizeWindowOne, txtNormalDistSizeWindowOne)
+        txtNormalDistSizeWindowOne.setUserData("NormalDistSizeWindowOne")
+        addOptionToGridPane(normalDistOptionsPane, lblNormalDistProbTriggerWindowOne, txtNormalDistProbTriggerWindowOne)
+        txtNormalDistProbTriggerWindowOne.setUserData("NormalDistProbTriggerWindowOne")
         addOptionToGridPane(normalDistOptionsPane, lblNormalDistWindowTwoMs, txtNormalDistWindowTwoMs)
-        addOptionToGridPane(normalDistOptionsPane, lblNormalDistProbTriggerWindowTwo, txtNormalDistProbTriggerWindowTwo)
+        txtNormalDistWindowTwoMs.setUserData("NormalDistWindowTwoMs")
         addOptionToGridPane(normalDistOptionsPane, lblNormalDistSizeWindowTwo, txtNormalDistSizeWindowTwo)
+        txtNormalDistSizeWindowTwo.setUserData("NormalDistSizeWindowTwo")
+        addOptionToGridPane(normalDistOptionsPane, lblNormalDistProbTriggerWindowTwo, txtNormalDistProbTriggerWindowTwo)
+        txtNormalDistProbTriggerWindowTwo.setUserData("NormalDistProbTriggerWindowTwo")
 
         /* Root layout */
         root.setPadding(new Insets(10))
@@ -101,6 +118,12 @@ class OptionsView(private val title: String) extends ScrollPane {
 
         /* Layout center */
         root.setCenter(new VBox(10, slidingWindowOptionsPane /*, separator*/ , normalDistOptionsPane))
+
+        /* Layout bottom */
+        btnSave.setAlignment(Pos.BOTTOM_RIGHT)
+        root.setBottom(new HBox(btnSave))
+        root.getBottom.asInstanceOf[HBox].setAlignment(Pos.BOTTOM_RIGHT)
+        root.getBottom.asInstanceOf[HBox].setPadding(new Insets(10, 0, 0, 0))
 
         /* Scrollpane */
         this.setContent(root)
