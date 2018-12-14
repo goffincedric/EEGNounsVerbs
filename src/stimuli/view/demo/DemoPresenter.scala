@@ -7,7 +7,7 @@ import javafx.scene.layout.{HBox, VBox}
 import javafx.scene.{Node, Parent, Scene}
 import javafx.stage.{Screen, Stage}
 import stimuli.model.Stimuli
-import stimuli.model.analysis.AnalysisService
+import stimuli.services.analysis.AnalysisService
 import stimuli.model.stimulus.Stimulus
 import stimuli.utils.customChart.LineChartWithMarkers
 import stimuli.view.chartAnalysis.{ChartAnalysisPresenter, ChartAnalysisView}
@@ -38,7 +38,6 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
             // Define the chart
             val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(stimulus.toString)
-            lineChart.setCreateSymbols(false)
 
             for (contact_point <- stimulus.measurements) {
                 // Define series
@@ -47,7 +46,7 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                 // Populate the series with data
                 for (measurement <- contact_point._2) {
                     series.setName(contact_point._1)
-                    series.getData.add(new XYChart.Data[Number, Number](contact_point._2.indexOf(measurement), measurement.value))
+                    series.getData.add(new XYChart.Data[Number, Number](contact_point._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 }
 
                 // Add series to chart
@@ -88,16 +87,12 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                       .toVector(0)
 
                     val buttonData = button.getUserData.asInstanceOf[(String, String)]
-
-
-                    //                    analysisText.setText("Baseline (mean): " + analysisService.calcBaseLine(model.stimuliMapUnsorted(tab.getText).map(stimulus => stimulus.))) // Gaat niet werken -> analysis text in nieuwe window openen met baseline per sensor per woord
-                    //                    val alert = new Alert(AlertType.INFORMATION, "Hello", ButtonType.OK)
-                    //                    alert.show()
-
-                    val chartAnalysisView = new ChartAnalysisView(String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2))
+                    val title = String.format("Graph analysis word: %s, person: %s", buttonData._1, buttonData._2)
+                    val chartAnalysisView = new ChartAnalysisView(title)
                     new ChartAnalysisPresenter(model, buttonData._1, buttonData._2, chartAnalysisView)
                     val newStage = new Stage()
                     val newScene = new Scene(chartAnalysisView)
+                    newStage.setTitle(title)
                     newScene.getStylesheets.addAll(demoView.getScene.getStylesheets)
                     newStage.setScene(newScene)
                     newStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)
@@ -108,9 +103,5 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                 }))
             })
         })
-    }
-
-    private def getByUserData(parent: Parent, userData: Any): FilteredList[Node] = {
-        parent.getChildrenUnmodifiable.filtered(node => node.getUserData.equals(userData))
     }
 }
