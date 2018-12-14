@@ -32,6 +32,7 @@ class EEG extends Application {
             val scene = new Scene(demoview)
             scene.getStylesheets.add("style/material-fx-v0_3.css")
             scene.getStylesheets.add("style/materialfx-toggleswitch.css")
+            scene.getStylesheets.add("style/general.css")
 //            scene.getStylesheets.add("style/Goliath.css")
             primaryStage.setTitle("EEG")
             primaryStage.setScene(scene)
