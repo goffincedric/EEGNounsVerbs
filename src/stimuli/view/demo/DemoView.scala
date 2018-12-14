@@ -3,7 +3,8 @@ package stimuli.view.demo
 import javafx.geometry.{Insets, Pos}
 import javafx.scene.chart.LineChart
 import javafx.scene.control._
-import javafx.scene.layout.{HBox, VBox}
+import javafx.scene.layout.{Background, HBox, VBox}
+import javafx.scene.paint.Color
 
 /**
   * @author Cédric Goffin
@@ -12,8 +13,10 @@ import javafx.scene.layout.{HBox, VBox}
   */
 class DemoView extends TabPane {
     def addTab(name: String, lineChartsMap: Map[String, LineChart[Number, Number]]): Unit = {
+
         // Create title label
         val title = new Label("EEG data " + name)
+        title.setId("title")
         title.setPadding(new Insets(10))
         title.setMaxWidth(Double.MaxValue)
         title.setAlignment(Pos.CENTER)
@@ -22,6 +25,8 @@ class DemoView extends TabPane {
 
         // Container for graphs
         val titledPaneContainer = new VBox(title)
+        titledPaneContainer.setId("pane")
+
 
         // Add graphs to container
         lineChartsMap.foreach(entry => {
@@ -46,10 +51,13 @@ class DemoView extends TabPane {
 
         // Create scrollpane for scrollable graphs
         val root = new ScrollPane(titledPaneContainer)
+        root.setFitToHeight(false)
         root.setFitToWidth(true)
+
 
         // Create tab
         val tab = new Tab(name)
+        tab.setId("tab")
         tab.setContent(root)
         tab.closableProperty().setValue(false)
 

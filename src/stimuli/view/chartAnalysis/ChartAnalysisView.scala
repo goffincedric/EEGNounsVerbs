@@ -47,6 +47,7 @@ class ChartAnalysisView(title: String) extends ScrollPane {
     // Container for NormalDistribution graphs in TitledPanes
     val titledPaneContainerNormal = new VBox()
 
+
     // General wrapper container for graphs
     val tpContainer = new VBox(titledPaneContainerSlidingWindow)
 
@@ -66,7 +67,7 @@ class ChartAnalysisView(title: String) extends ScrollPane {
         // Layout Top
         /* Menubar */
         menubar.getMenus.add(optionsMenuItem)
-        menubar.setStyle("-fx-padding: 1 1 1 1; -fx-min-height: 0;")
+        menubar.setStyle("-fx-padding: 1 1 1 1; -fx-min-height: 0; -fx-text-fill: #FFF;")
 
         /* Title lable */
         lblTitle.setPadding(new Insets(10))

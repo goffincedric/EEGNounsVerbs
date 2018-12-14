@@ -1,0 +1,87 @@
+/*
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,900');
+
+.tab-pane {
+    -fx-highlight-text-fill: #FFF;
+    -fx-background-color: #2c3e50;
+}
+
+.tab-label {
+    -fx-text-fill: #FFF ;
+}
+
+.tab-header-background {
+    -fx-background-color: #2c3e50 ;
+}
+
+.tab-content-area{
+    -fx-background-color: #2c3e50
+}
+
+#title{
+    -fx-text-fill:#FFF;
+    -fx-font: 24px 'Source Sans Pro', sans-serif;
+    -fx-font-weight: 900px;
+
+}
+
+#tab{
+    !*-fx-background-color: #262626;*!
+    -fx-text-fill:#FFF;
+    -fx-background-color: #2c3e50;
+    -fx-font-size: 15px;
+}
+
+HBox, VBox {
+    -fx-text-fill:#FFF;
+    -fx-background-color: #2c3e50;
+}
+
+
+
+
+.chart {
+    -fx-padding: 10px;
+    -fx-background-color: #2c3e50;
+    -fx-legend-visible: false;
+}
+
+.chart-content {
+    -fx-padding: 30px;
+}
+
+.chart-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 1.6em;
+}
+
+.axis-label {
+    -fx-text-fill: #ffffff;
+}
+
+.chart-plot-background {
+    -fx-background-color:transparent;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke:#505050;
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: #505050;
+}
+
+.chart-alternative-row-fill {
+    -fx-fill:transparent;
+    -fx-stroke: transparent;
+}
+
+.button{
+    -fx-text-fill: white;
+    -fx-border-radius: 0;
+    -fx-background-color: Grey;
+}*/
+
+.title-pane{
+
+}
