@@ -1,12 +1,17 @@
 package stimuli.view.chartAnalysis
 
 import javafx.collections.ListChangeListener
+import javafx.scene.Scene
 import javafx.scene.chart.{NumberAxis, XYChart}
 import javafx.scene.control.TitledPane
+import javafx.scene.input.MouseEvent
+import javafx.stage.{Modality, Stage}
 import stimuli.model.Stimuli
-import stimuli.model.analysis.result.SensorResult
-import stimuli.model.analysis.{AnalysisService, AnalysisType}
+import stimuli.model.analysis.{AnalysisType, SensorResult}
+import stimuli.services.analysis.AnalysisService
+import stimuli.services.options.OptionsService
 import stimuli.utils.customChart.LineChartWithMarkers
+import stimuli.view.options.{OptionsPresenter, OptionsView}
 
 /**
   * @author Cédric Goffin
@@ -15,6 +20,7 @@ import stimuli.utils.customChart.LineChartWithMarkers
   */
 class ChartAnalysisPresenter(private val model: Stimuli, private val name: String, private val word: String, private val chartAnalysisView: ChartAnalysisView) {
     private val analysisService = new AnalysisService
+    private val optionsService = new OptionsService(model.optionsFilePath)
     private val stimulus = model.stimuliMapUnsorted(name).filter(s => s.word.equals(word)).head
 
     // Split stimulus sensor data
@@ -33,7 +39,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Populate the series with data
             for (measurement <- cp._2) {
                 series.setName(cp._1)
-                series.getData.add(new XYChart.Data[Number, Number](cp._2.indexOf(measurement), measurement.value))
+                series.getData.add(new XYChart.Data[Number, Number](cp._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
             }
 
             // Add series to chart
@@ -55,7 +61,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Define the chart
                 val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
                 lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + range + "ms") // Sensor name
-                lineChart.setCreateSymbols(false)
 
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -63,7 +68,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
                 analysisService.getFirstWindow(sensorMeasurements._2, range).foreach(measurement => {
                     // Populate the series with data
-                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
                 lineChart.getData.add(series)
 
@@ -91,7 +96,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Define the chart
             val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
             lineChart.setTitle(sensorMeasurements._1) // Sensor name
-            lineChart.setCreateSymbols(false)
 
             // Define series
             val series = new XYChart.Series[Number, Number]
@@ -99,7 +103,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
             sensorMeasurements._2.foreach(measurement => {
                 // Populate the series with data
-                series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
             })
             lineChart.getData.add(series)
 
@@ -118,10 +122,20 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     }
 
     private def analyseSensorGraphsHorSlidingWindow(sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
+        // Get options
+        val options = optionsService.getOptions
+        val rangeSizeIncrement = options.filter(o => o.name.equals("SlidingRangeSizeIncrement")).head
+        val maxRangeSize = options.filter(o => o.name.equals("SlidingMaxRangeSize")).head
+        val splitPointMs = options.filter(o => o.name.equals("SlidingSplitPointMs")).head
+        val windowOneMs = options.filter(o => o.name.equals("SlidingWindowOneMs")).head
+        val sizeWindowOne = options.filter(o => o.name.equals("SlidingSizeWindowOne")).head
+        val windowTwoMs = options.filter(o => o.name.equals("SlidingWindowTwoMs")).head
+        val sizeWindowTwo = options.filter(o => o.name.equals("SlidingSizeWindowTwo")).head
+
         // Map of sensorResults and Charts
         val sensorResultsMap = stimulus.measurements.map(sensorMeasurements => {
             // Analyse chart
-            val results = analysisService.analyseHorizontalSlidingWindow(sensorMeasurements, 10, sizeWindowOne, 0.95, 100, sizeWindowTwo, 0.97)
+            val results = analysisService.analyseHorizontalSlidingWindow(sensorMeasurements, splitPointMs.value.toDouble, windowOneMs.value.toDouble, sizeWindowOne.value.toInt, 0.95, windowTwoMs.value.toDouble, sizeWindowTwo.value.toInt, 0.97, maxRangeSize.value.toDouble, rangeSizeIncrement.value.toDouble)
 
             // Create sliding window graphs
             val linecharts = results.map(result => {
@@ -134,7 +148,6 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Define the chart
                 val lineChart = new LineChartWithMarkers[Number, Number](xAxis, yAxis)
                 lineChart.setTitle(sensorMeasurements._1 + "; Range: 0ms -> " + result.maxRangeMs + "ms; " + result.description) // Sensor name
-                lineChart.setCreateSymbols(false)
 
                 // Define series
                 val series = new XYChart.Series[Number, Number]
@@ -142,7 +155,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
 
                 analysisService.getFirstWindow(sensorMeasurements._2, result.maxRangeMs).foreach(measurement => {
                     // Populate the series with data
-                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement), measurement.value))
+                    series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
                 lineChart.getData.add(series)
 
@@ -154,9 +167,9 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Add vertical value markers
                 result.verticalMarkers.foreach(range => {
                     if (range._1 == range._2)
-                        lineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
+                        lineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
                     else
-                        lineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
+                        lineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
                 })
 
                 // Set line style
@@ -170,43 +183,74 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             (results, sensorMeasurements._1 -> linecharts)
         }).toVector
 
-        // Add charts to container
-        chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
+        // Collect all old sensor charts and map to respective animation
+        val lineChartAnimations = chartAnalysisView.getChartsFromContainer(chartAnalysisView.titledPaneContainerSlidingWindow).values.flatten.map(lc => lc.getAnimation(() => ())).toVector
+        val fullLineChartAnimation =
+            chartAnalysisView.fullLineChart.getAnimation(() => {
+                // Add charts to container
+                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
 
-        markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+                // Mark full graph
+                markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+            })
+
+        // Concat animations and play
+        (lineChartAnimations :+ fullLineChartAnimation).foreach(animation => animation.play())
     }
 
     private def analyseSensorGraphsNormalDist(sizeWindowOne: Int, sizeWindowTwo: Int): Unit = {
+        // Get options
+        val options = optionsService.getOptions
+        val splitPointMs = options.filter(o => o.name.equals("NormalDistSplitPointMs")).head
+        val windowOneMs = options.filter(o => o.name.equals("NormalDistWindowOneMs")).head
+        val sizeWindowOne = options.filter(o => o.name.equals("NormalDistSizeWindowOne")).head
+        val probTriggerWindowOne = options.filter(o => o.name.equals("NormalDistProbTriggerWindowOne")).head
+        val windowTwoMs = options.filter(o => o.name.equals("NormalDistWindowTwoMs")).head
+        val sizeWindowTwo = options.filter(o => o.name.equals("NormalDistSizeWindowTwo")).head
+        val probTriggerWindowTwo = options.filter(o => o.name.equals("NormalDistProbTriggerWindowTwo")).head
+
         // Sensor charts
         val sensorChartsMap: Map[String, Vector[LineChartWithMarkers[Number, Number]]] = chartAnalysisView.getChartsFromContainer(chartAnalysisView.titledPaneContainerNormal)
 
         // Modify sensorGraphs
-        val sensorResults = stimulus.measurements.map(sensorMeasurements => {
+        val sensorResultsChartMap = stimulus.measurements.map(sensorMeasurements => {
             // Analyse chart
             val baseLine = analysisService.calcBaseLine(sensorMeasurements._2.map(m => m.value))
-            val sensorResult = analysisService.analyseNormalDist(sensorMeasurements, 10, sizeWindowOne, 0.95, 100, sizeWindowTwo, 0.97)
+            val sensorResult = analysisService.analyseNormalDist(sensorMeasurements, splitPointMs.value.toDouble, windowOneMs.value.toDouble, sizeWindowOne.value.toInt, probTriggerWindowOne.value.toDouble, windowTwoMs.value.toDouble, sizeWindowTwo.value.toInt, probTriggerWindowTwo.value.toDouble)
 
             // Define the chart
             val sensorChart = sensorChartsMap(sensorMeasurements._1).head
             // Clear chart of previous analyses
             sensorChart.removeAllMarkers()
 
-            // Add value marker for baseline
-            sensorChart.addHorizontalValueMarker(new XYChart.Data[Number, Number](0, baseLine))
-
-            // Add value markers for sensorResults
-            sensorResult.verticalMarkers.foreach(range => {
-                if (range._1 == range._2)
-                    sensorChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
-                else
-                    sensorChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
-            })
-
             // return sensor result
-            sensorResult
+            (sensorResult, baseLine) -> sensorChart
         })
 
-        markFullGraph(sensorResults)
+        // Collect all old sensor charts and map to respective animation
+        val lineChartAnimations = sensorChartsMap.values.flatten.map(lc => lc.getAnimation(() => ())).toVector
+        val fullLineChartAnimation =
+            chartAnalysisView.fullLineChart.getAnimation(() => {
+                // Mark sensorCharts
+                sensorResultsChartMap.foreach(pair => {
+                    // Add value marker for baseline
+                    pair._2.addHorizontalValueMarker(new XYChart.Data[Number, Number](0, pair._1._2))
+
+                    // Add value markers for sensorResults
+                    pair._1._1.verticalMarkers.foreach(range => {
+                        if (range._1 == range._2)
+                            pair._2.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
+                        else
+                            pair._2.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
+                    })
+                })
+
+                // Mark full graph
+                markFullGraph(sensorResultsChartMap.keys.map(pair => pair._1))
+            })
+
+        // Concat animations and play
+        (lineChartAnimations :+ fullLineChartAnimation).foreach(animation => animation.play())
     }
 
     private def markFullGraph(sensorResults: Iterable[SensorResult]): Unit = {
@@ -219,17 +263,15 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         // Vertical markers
         unifiedSensorResult.verticalMarkers.foreach(range => {
             if (range._1 == range._2)
-                chartAnalysisView.fullLineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1, 0))
+                chartAnalysisView.fullLineChart.addVerticalValueMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, 0))
             else
-                chartAnalysisView.fullLineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1, range._2))
+                chartAnalysisView.fullLineChart.addVerticalRangeMarker(new XYChart.Data[Number, Number](range._1 * model.hardcodedDelayMS, range._2 * model.hardcodedDelayMS))
         })
     }
 
     private def chooseAnalysisStrategy(): (Int, Int) => Unit = {
         AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
             case AnalysisType.HORIZONTAL_SLIDING_WINDOW =>
-                analyseSensorGraphsHorSlidingWindow
-            case AnalysisType.VERTICAL_SLIDING_WINDOW => //TODO
                 analyseSensorGraphsHorSlidingWindow
             case AnalysisType.NORMAL_DISTRIBUTION =>
                 analyseSensorGraphsNormalDist
@@ -239,9 +281,21 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     }
 
     private def addEventHandlers(): Unit = {
+        chartAnalysisView.optionsMenuItem.getGraphic.setOnMouseClicked((event: MouseEvent) => {
+            val optionsView = new OptionsView("Options Analysis")
+            new OptionsPresenter(model, optionsView)
+            val newStage = new Stage()
+            newStage.initModality(Modality.APPLICATION_MODAL)
+            val newScene = new Scene(optionsView)
+            newScene.getStylesheets.addAll(chartAnalysisView.getScene.getStylesheets)
+            newStage.setScene(newScene)
+            newStage.toFront()
+            newStage.show()
+        })
+
         chartAnalysisView.cmbAnalysisChoice.getSelectionModel.selectedItemProperty().addListener((options, oldValue, newValue) => {
             AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
-                case AnalysisType.HORIZONTAL_SLIDING_WINDOW | AnalysisType.VERTICAL_SLIDING_WINDOW =>
+                case AnalysisType.HORIZONTAL_SLIDING_WINDOW =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerSlidingWindow)
                 case AnalysisType.NORMAL_DISTRIBUTION | AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerNormal)
@@ -336,6 +390,4 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             }
         })
     }
-
-
 }

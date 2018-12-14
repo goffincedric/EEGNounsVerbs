@@ -17,14 +17,20 @@ object EEG {
 
 class EEG extends Application {
     override def start(primaryStage: Stage): Unit = {
-        if (getParameters.getNamed.get("filesPath").isEmpty) {
-            System.err.println("No name argument 'filesPath' was given. Please use the argument --filesPath=<Path to data files>")
+        if (getParameters.getNamed.get("filesPath") == null) {
+            System.err.println("No name argument 'filesPath' was given. Please use the argument --filesPath=<Path to directory with data files>")
+            System.exit(1)
+        } else if (getParameters.getNamed.get("optionsFilePath") == null) {
+            System.err.println("No name argument 'optionsFilePath' was given. Please use the argument --optionsFilePath=<Path to option file>")
             System.exit(1)
         } else {
-            if (getParameters.getNamed.get("dataDelaysMS").isEmpty) {
+            if (getParameters.getNamed.get("optionsFilePath").isEmpty) {
+                System.err.println("No name argument 'optionsFilePath' was given.")
+            }
+            if (getParameters.getNamed.get("dataDelaysMS") == null) {
                 System.err.println("No name argument 'dataDelaysMS' was given. Default delay of 7.8125ms will be used.")
             }
-            val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv", getParameters.getNamed.get("dataDelaysMS").toDouble)
+            val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv", getParameters.getNamed.getOrDefault("dataDelaysMS", "7.8125").toDouble, getParameters.getNamed.get("optionsFilePath"))
             val demoview = new DemoView
             val presenter = new DemoPresenter(model, demoview)
 
@@ -32,7 +38,6 @@ class EEG extends Application {
             val scene = new Scene(demoview)
             scene.getStylesheets.add("style/material-fx-v0_3.css")
             scene.getStylesheets.add("style/materialfx-toggleswitch.css")
-//            scene.getStylesheets.add("style/Goliath.css")
             primaryStage.setTitle("EEG")
             primaryStage.setScene(scene)
             primaryStage.setWidth(Screen.getPrimary.getVisualBounds.getWidth)

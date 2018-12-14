@@ -11,7 +11,7 @@ import scala.io.Source
   *         17/10/2018 16:14
   *
   */
-class Stimuli(path: String, endsWith: String, hardcodedDelayMS: Double = 7.8125) {
+class Stimuli(private val path: String, private val endsWith: String, val hardcodedDelayMS: Double, val optionsFilePath: String) {
     // Fill map with CSV data
     private val _stimuliMap: Map[String, (Vector[Stimulus], Vector[Stimulus])] = readFiles(getListOfCSVFiles, Map())
 
