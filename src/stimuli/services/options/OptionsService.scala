@@ -2,7 +2,7 @@ package stimuli.services.options
 
 import java.io.{File, FileWriter, IOException, Writer}
 
-import com.google.gson.{FieldNamingPolicy, Gson, GsonBuilder, JsonParser}
+import com.google.gson.{GsonBuilder, JsonParser}
 import stimuli.model.option.AnalysisOption
 
 import scala.io.Source
@@ -34,6 +34,10 @@ class OptionsService(val optionsPath: String) {
             writeOptions(defaultOptions)
             defaultOptions
         }
+    }
+
+    def getOption(name: String): AnalysisOption = {
+        getOptions.filter(o => o.name.equals(name)).head
     }
 
     private def getDefaultOptions: Array[AnalysisOption] = {

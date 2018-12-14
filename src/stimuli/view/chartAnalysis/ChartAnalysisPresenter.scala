@@ -3,7 +3,7 @@ package stimuli.view.chartAnalysis
 import javafx.collections.ListChangeListener
 import javafx.scene.Scene
 import javafx.scene.chart.{NumberAxis, XYChart}
-import javafx.scene.control.TitledPane
+import javafx.scene.control.{TitledPane, Tooltip}
 import javafx.scene.input.MouseEvent
 import javafx.stage.{Modality, Stage}
 import stimuli.model.Stimuli
@@ -24,7 +24,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
     private val stimulus = model.stimuliMapUnsorted(name).filter(s => s.word.equals(word)).head
 
     // Split stimulus sensor data
-    createSensorGraphs(4, 1)
+    createSensorGraphs(optionsService.getOption("SlidingSizeWindowOne").value.toInt, optionsService.getOption("SlidingSizeWindowTwo").value.toInt)
 
     // Add eventhandlers to tabs
     addEventHandlers()
@@ -43,7 +43,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             }
 
             // Add series to chart
-            chartAnalysisView.fullLineChart.getData.add(series)
+            chartAnalysisView.fullLineChart.addSeriesToData(series)
 
             // Set line style
             series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
@@ -70,7 +70,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                     // Populate the series with data
                     series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
-                lineChart.getData.add(series)
+                lineChart.addSeriesToData(series)
 
                 // Set line style
                 series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
@@ -105,7 +105,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 // Populate the series with data
                 series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
             })
-            lineChart.getData.add(series)
+            lineChart.addSeriesToData(series)
 
             // Set line style
             series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
@@ -113,6 +113,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             // Return entry with sensorname and corresponding linechart
             sensorMeasurements._1 -> Vector(lineChart)
         })
+
         // Add charts to container
         chartAnalysisView.addCharts(lineChartsNormalDistMap, "Sensor detail charts", chartAnalysisView.titledPaneContainerNormal)
 
@@ -157,7 +158,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                     // Populate the series with data
                     series.getData.add(new XYChart.Data[Number, Number](sensorMeasurements._2.indexOf(measurement) * model.hardcodedDelayMS, measurement.value))
                 })
-                lineChart.getData.add(series)
+                lineChart.addSeriesToData(series)
 
                 // Add horizontal value markers
                 result.horizontalMarkers.foreach(marker => {
@@ -180,18 +181,18 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             })
 
             // return sensor results
-            (results, sensorMeasurements._1 -> linecharts)
-        }).toVector
+            (results, sensorMeasurements._1) -> linecharts
+        })
 
         // Collect all old sensor charts and map to respective animation
         val lineChartAnimations = chartAnalysisView.getChartsFromContainer(chartAnalysisView.titledPaneContainerSlidingWindow).values.flatten.map(lc => lc.getAnimation(() => ())).toVector
         val fullLineChartAnimation =
             chartAnalysisView.fullLineChart.getAnimation(() => {
                 // Add charts to container
-                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._2._1 -> entry._2._2).toMap, "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
+                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._1._2 ->  entry._2), "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
 
                 // Mark full graph
-                markFullGraph(sensorResultsMap.flatMap(entry => entry._1))
+                markFullGraph(sensorResultsMap.keys.flatMap(entry => entry._1))
             })
 
         // Concat animations and play

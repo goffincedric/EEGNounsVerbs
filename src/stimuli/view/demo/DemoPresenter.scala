@@ -50,7 +50,7 @@ class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) 
                 }
 
                 // Add series to chart
-                lineChart.getData.add(series)
+                lineChart.addSeriesToData(series)
 
                 // Set line style
                 series.getNode.setStyle("-fx-stroke-width: 2px; -fx-effect: null;")
