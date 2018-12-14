@@ -35,7 +35,7 @@ class AnalysisService {
         new SensorResult("Overview", mergedIndexes)
     }
 
-    def analyseHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double,windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double, maxRangeMS: Double = 4000, rangeStepMs: Double = 1000, counter: Int = 1): Vector[SensorResult] = {
+    def analyseHorizontalSlidingWindow(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double, windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double, maxRangeMS: Double = 4000, rangeStepMs: Double = 1000, counter: Int = 1): Vector[SensorResult] = {
         // Recursion check
         if (counter * rangeStepMs > maxRangeMS) {
             // Return sensorResult vector
@@ -61,7 +61,7 @@ class AnalysisService {
         val remarkableIndexes = mergeRemarkableMeasurementIndexes(remarkableHorWindowIndexes.distinct.sorted)
 
         // Return new SensorResult with recursion vector
-        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs, f"Mean: $mean%.3f; standard deviation: $stdDev%.7f")) ++ analyseHorizontalSlidingWindow(sensorMeasurements, splitPointMs,windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
+        Vector(new SensorResult(sensorMeasurements._1, remarkableIndexes, Vector(mean), counter * rangeStepMs, f"Mean: $mean%.3f; standard deviation: $stdDev%.7f")) ++ analyseHorizontalSlidingWindow(sensorMeasurements, splitPointMs, windowsSizeMsOne, sizeWindowOne, probabilityTriggerOne, windowsSizeMsTwo, sizeWindowTwo, probabilityTriggerTwo, maxRangeMS, rangeStepMs, counter + 1)
     }
 
     private def analyseDataFramesHorWindow(data: Vector[Measurement], windowsMs: Double, windowSize: Int, probabilityTrigger: Double, mean: Double, stdDev: Double, indexOffset: Int, resultsMeasurementList: Vector[Measurement] = Vector(), origData: Vector[Measurement] = Vector()): Vector[Int] = {
@@ -100,7 +100,7 @@ class AnalysisService {
         }
     }
 
-    def analyseNormalDist(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double , windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
+    def analyseNormalDist(sensorMeasurements: (String, Vector[Measurement]), splitPointMs: Double, windowsSizeMsOne: Double, sizeWindowOne: Int, probabilityTriggerOne: Double, windowsSizeMsTwo: Double, sizeWindowTwo: Int, probabilityTriggerTwo: Double): SensorResult = {
         // Data opdelen in eerste 2 en laatste 2 seconden
         val datasets = splitDataset(sensorMeasurements._2, splitPointMs)
 
@@ -131,14 +131,6 @@ class AnalysisService {
             // Normaalverdeling opstellen a.d.h.v. gemiddelde (test uit in geogebra: https://www.geogebra.org/classic#probability)
             if (normalDistribution.getStandardDeviation > 0) {
                 // stdDev * 2 = 95% van alle waarden => waarde groter dan stdDev*2 is dus opmerkelijk
-                //                val normalProbability = normalDist.probability(mean - (stdDev * 2), mean + (stdDev * 2))
-                // Todo: probabilityTrigger gebruiken? als probability < probabilityTrigger
-                //                val probability =
-                //                    if (window.last.value < mean)
-                //                        normalDist.probability(normalDist.getSupportLowerBound, window.last.value)
-                //                    else
-                //                        normalDist.probability(window.last.value, normalDist.getSupportUpperBound)
-
                 val indexes = window.map(m => {
                     if (m.value < normalDistribution.getMean)
                         (normalDistribution.probability(normalDistribution.getSupportLowerBound, m.value), m)
