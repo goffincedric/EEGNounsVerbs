@@ -189,7 +189,7 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
         val fullLineChartAnimation =
             chartAnalysisView.fullLineChart.getAnimation(() => {
                 // Add charts to container
-                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._1._2 ->  entry._2), "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
+                chartAnalysisView.addCharts(sensorResultsMap.map(entry => entry._1._2 -> entry._2), "Sensor range charts", chartAnalysisView.titledPaneContainerSlidingWindow)
 
                 // Mark full graph
                 markFullGraph(sensorResultsMap.keys.flatMap(entry => entry._1))
@@ -276,8 +276,8 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 analyseSensorGraphsHorSlidingWindow
             case AnalysisType.NORMAL_DISTRIBUTION =>
                 analyseSensorGraphsNormalDist
-            case AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION => //TODO
-                analyseSensorGraphsNormalDist
+            //            case AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION => //TODO
+            //                analyseSensorGraphsNormalDist
         }
     }
 
@@ -298,58 +298,26 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
             AnalysisType.withName(chartAnalysisView.cmbAnalysisChoice.getSelectionModel.getSelectedItem) match {
                 case AnalysisType.HORIZONTAL_SLIDING_WINDOW =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerSlidingWindow)
-                case AnalysisType.NORMAL_DISTRIBUTION | AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION =>
+                case AnalysisType.NORMAL_DISTRIBUTION /*| AnalysisType.DIFFERENTIAL_NORMAL_DISTRIBUTION*/ =>
                     chartAnalysisView.tpContainer.getChildren.set(0, chartAnalysisView.titledPaneContainerNormal)
             }
         })
 
-        chartAnalysisView.btnAnalyse.setOnMouseClicked(_ => {
-            chooseAnalysisStrategy().apply(4, 1)
-        })
+        chartAnalysisView.btnAnalyse.setOnMouseClicked(_ => chooseAnalysisStrategy().apply(4, 1))
 
-        chartAnalysisView.btnClearAllMarkers.setOnMouseClicked(_ => {
-            // Full chart
-            chartAnalysisView.fullLineChart.removeAllMarkers()
+        chartAnalysisView.btnClearAllMarkers.setOnMouseClicked(_ => removeAllChartMarkers())
 
-            // Graphs from containers
-            Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
-              .flatMap(chartAnalysisView.getChartsFromContainer)
-              .foreach(entry => entry._2.foreach(lc => lc.removeAllMarkers()))
-        })
+        chartAnalysisView.btnClearHMarkers.setOnMouseClicked(_ => removeHorizontalChartMarkers())
 
-        chartAnalysisView.btnClearHMarkers.setOnMouseClicked(_ => {
-            // Full chart
-            chartAnalysisView.fullLineChart.removeAllHorizontalValueMarkers()
-
-            // Graphs from containers
-            Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
-              .flatMap(chartAnalysisView.getChartsFromContainer)
-              .foreach(entry => entry._2.foreach(lc => lc.removeAllHorizontalValueMarkers()))
-        })
-
-        chartAnalysisView.btnClearVMarkers.setOnMouseClicked(_ => {
-            // Full chart
-            chartAnalysisView.fullLineChart.removeAllVerticalValueMarkers()
-            chartAnalysisView.fullLineChart.removeAllVerticalRangeMarkers()
-
-            // Graphs from containers
-            Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
-              .flatMap(chartAnalysisView.getChartsFromContainer)
-              .foreach(entry => {
-                  entry._2.foreach(lc => {
-                      lc.removeAllVerticalValueMarkers()
-                      lc.removeAllVerticalRangeMarkers()
-                  })
-              })
-        })
+        chartAnalysisView.btnClearVMarkers.setOnMouseClicked(_ => removeVerticalChartMarkers())
 
         chartAnalysisView.chcmbSensors.getCheckModel.getCheckedItems.addListener(new ListChangeListener[String] {
             override def onChanged(c: ListChangeListener.Change[_ <: String]): Unit = {
                 while (c.next()) {
                     if (c.wasAdded()) {
                         val tpSliding = chartAnalysisView.titledPaneContainerSlidingWindow.getChildren
-                          .filtered(n => n.isInstanceOf[TitledPane])
-                          .filtered(n => n.asInstanceOf[TitledPane].getText.replace("Sensor: ", "").equalsIgnoreCase(c.getAddedSubList.get(0)))
+                          .filtered(_.isInstanceOf[TitledPane])
+                          .filtered(_.asInstanceOf[TitledPane].getText.replace("Sensor: ", "").equalsIgnoreCase(c.getAddedSubList.get(0)))
                           .get(0)
                         tpSliding.setVisible(true)
                         tpSliding.setManaged(true)
@@ -390,5 +358,39 @@ class ChartAnalysisPresenter(private val model: Stimuli, private val name: Strin
                 }
             }
         })
+    }
+
+    private def removeVerticalChartMarkers(): Unit = {
+        // Full chart
+        chartAnalysisView.fullLineChart.removeAllMarkers()
+
+        // Graphs from containers
+        Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
+          .flatMap(chartAnalysisView.getChartsFromContainer)
+          .foreach(entry => entry._2.foreach(lc => lc.removeAllMarkers()))
+    }
+
+    private def removeHorizontalChartMarkers(): Unit = {// Full chart
+        chartAnalysisView.fullLineChart.removeAllHorizontalValueMarkers()
+
+        // Graphs from containers
+        Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
+          .flatMap(chartAnalysisView.getChartsFromContainer)
+          .foreach(entry => entry._2.foreach(lc => lc.removeAllHorizontalValueMarkers()))
+    }
+
+    private def removeAllChartMarkers(): Unit = {// Full chart
+        chartAnalysisView.fullLineChart.removeAllVerticalValueMarkers()
+        chartAnalysisView.fullLineChart.removeAllVerticalRangeMarkers()
+
+        // Graphs from containers
+        Vector(chartAnalysisView.titledPaneContainerSlidingWindow, chartAnalysisView.titledPaneContainerNormal)
+          .flatMap(chartAnalysisView.getChartsFromContainer)
+          .foreach(entry => {
+              entry._2.foreach(lc => {
+                  lc.removeAllVerticalValueMarkers()
+                  lc.removeAllVerticalRangeMarkers()
+              })
+          })
     }
 }
