@@ -24,25 +24,25 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
     initDefaultStyle()
 
     private def initDefaultStyle(): Unit = {
-        //        this.setCreateSymbols(false)
+        this.setCreateSymbols(false)
         this.setAnimated(true)
         this.setCursor(Cursor.CROSSHAIR)
     }
 
     def addSeriesToData(series: XYChart.Series[X, Y]): Unit = {
         this.getData.add(series)
-//
-//        series.getData.forEach(data => {
-//            val t = new Tooltip(data.getYValue.asInstanceOf[Double].toString)
-//            val node1 = data.getNode
-//            Tooltip.install(data.getNode, t)
-//
-//            val node = t.getOwnerNode
-//            //Adding class on hover
-//            this.setOnMouseEntered(_ => data.getNode.getStyleClass.add("onHover"))
-//            //Removing class on exit
-//            data.getNode.setOnMouseExited(_ => data.getNode.getStyleClass.remove("onHover"))
-//        })
+        //
+        //        series.getData.forEach(data => {
+        //            val t = new Tooltip(data.getYValue.asInstanceOf[Double].toString)
+        //            val node1 = data.getNode
+        //            Tooltip.install(data.getNode, t)
+        //
+        //            val node = t.getOwnerNode
+        //            //Adding class on hover
+        //            this.setOnMouseEntered(_ => data.getNode.getStyleClass.add("onHover"))
+        //            //Removing class on exit
+        //            data.getNode.setOnMouseExited(_ => data.getNode.getStyleClass.remove("onHover"))
+        //        })
     }
 
     def getHorizontalValueMarkers: ObservableList[XYChart.Data[X, Y]] = this._horizontalMarkers
