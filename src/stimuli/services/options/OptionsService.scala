@@ -9,7 +9,7 @@ import scala.io.Source
 
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         07/12/2018 09:23
   *
   */

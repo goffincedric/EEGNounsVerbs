@@ -3,7 +3,7 @@ package stimuli.model.analysis
 import stimuli.model.stimulus.Stimulus
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         23/11/2018 09:55
   *
   */

@@ -1,7 +1,7 @@
 package stimuli.model.stimulus
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         12/11/2018 14:24
   *
   */

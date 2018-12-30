@@ -7,7 +7,7 @@ import stimuli.model.stimulus.{Measurement, Stimulus, StimulusType}
 import scala.io.Source
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         17/10/2018 16:14
   *
   */

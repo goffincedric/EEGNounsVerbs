@@ -7,7 +7,7 @@ import stimuli.model.stimulus.Measurement
 import scala.Numeric.Implicits._
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         19/11/2018 14:26
   *
   */

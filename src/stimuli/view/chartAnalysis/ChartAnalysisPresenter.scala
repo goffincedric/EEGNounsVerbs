@@ -14,7 +14,7 @@ import stimuli.utils.customChart.LineChartWithMarkers
 import stimuli.view.options.{OptionsPresenter, OptionsView}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         17/10/2018 16:15
   *
   */

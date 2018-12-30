@@ -4,7 +4,7 @@ import javafx.scene.control.TextField
 import javafx.scene.{Node, Parent}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         08/12/2018 19:49
   *
   */
