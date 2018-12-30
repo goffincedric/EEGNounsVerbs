@@ -4,9 +4,9 @@ import java.util.Objects
 
 import javafx.animation.{Interpolator, PathTransition}
 import javafx.collections.{FXCollections, ObservableList}
+import javafx.event.ActionEvent
 import javafx.scene.Cursor
 import javafx.scene.chart.{Axis, LineChart, NumberAxis, XYChart}
-import javafx.scene.control.{Label, Tooltip}
 import javafx.scene.paint.Color
 import javafx.scene.shape._
 import javafx.util.Duration
@@ -170,14 +170,7 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         val transition = generatePathTransition(markerRect, path)
 
         // Cleanup after transition has ended
-        transition.setOnFinished(_ => {
-            // Remove used nodes and animation components
-            getPlotChildren.removeAll(path, markerRect)
-            removeVerticalRangeMarker(marker)
-
-            // Execute callBack
-            onFinishedCallBack.apply()
-        })
+        transition.setOnFinished(finishTransition(_, path, markerRect, marker, onFinishedCallBack))
 
         transition
     }
@@ -202,6 +195,15 @@ class LineChartWithMarkers[X, Y](val xAxis: Axis[X], val yAxis: Axis[Y]) extends
         path.getElements.add(new MoveTo(xAxis.getDisplayPosition(data.get(0).getXValue), yAxis.asInstanceOf[NumberAxis].getDisplayPosition((yBounds.getUpperBound + yBounds.getLowerBound) / 2)))
         path.getElements.add(new LineTo(xAxis.getDisplayPosition(data.get(data.size() - 1).getXValue), yAxis.asInstanceOf[NumberAxis].getDisplayPosition((yBounds.getUpperBound + yBounds.getLowerBound) / 2)))
         path
+    }
+
+    private def finishTransition(event: ActionEvent, path: Path, markerRect: Rectangle, marker: XYChart.Data[X, Y], onFinishedCallBack: () => Unit): Unit = {
+        // Remove used nodes and animation components
+        getPlotChildren.removeAll(path, markerRect)
+        removeVerticalRangeMarker(marker)
+
+        // Execute callBack
+        onFinishedCallBack.apply()
     }
 
     override protected def layoutPlotChildren(): Unit = {

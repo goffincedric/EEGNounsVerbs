@@ -203,11 +203,10 @@ class AnalysisService {
         }
     }
 
-    private def calcDifferences(values: Vector[Measurement]): Vector[Double] = {
+    private def calcDifferences(values: Vector[Measurement]): Vector[Double] =
         values.sliding(2).map {
             case Seq(x, y, _*) => y.value - x.value
         }.toVector
-    }
 
     private def calcMean[T: Numeric](xs: Iterable[T]): Double =
         xs.sum.toDouble / xs.size

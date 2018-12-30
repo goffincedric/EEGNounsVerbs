@@ -18,9 +18,6 @@ import stimuli.view.chartAnalysis.{ChartAnalysisPresenter, ChartAnalysisView}
   *
   */
 class DemoPresenter(private val model: Stimuli, private val demoView: DemoView) {
-    //TODO: Scherm maken waar opties ingesteld kunnen worden (standaardafwijking, grootte sliding window (1ste twee seconden = grootte * 10ms, laatste 2 secondsn = grootte * 100ms), ...
-    private val analysisService = new AnalysisService
-
     // Add data to view
     model.stimuliMap.foreach(addDataPane)
 

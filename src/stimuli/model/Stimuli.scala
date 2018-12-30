@@ -2,6 +2,7 @@ package stimuli.model
 
 import java.io.File
 
+import stimuli.model.stimulus.StimulusType.StimulusType
 import stimuli.model.stimulus.{Measurement, Stimulus, StimulusType}
 
 import scala.io.Source
@@ -105,10 +106,13 @@ class Stimuli(private val path: String, private val endsWith: String, val hardco
     }
 
     private def splitNounsVerbs(stimuli: Vector[Stimulus]): (Vector[Stimulus], Vector[Stimulus]) = {
-        val nouns = stimuli.filter(stimulus => stimulus.stimulusType == StimulusType.NOUN)
-        val verbs = stimuli.filter(stimulus => stimulus.stimulusType == StimulusType.VERB)
+        val nouns = stimuli.filter(filterByStimulusType(_, StimulusType.NOUN))
+        val verbs = stimuli.filter(filterByStimulusType(_, StimulusType.VERB))
         (nouns, verbs)
     }
+
+    private def filterByStimulusType(stimulus: Stimulus, stimulusType: StimulusType): Boolean =
+        stimulus.stimulusType == stimulusType
 
     private def cleanupData(vector: Vector[Measurement], n_average: Int): Vector[Measurement] = {
         vector.toStream.map(m => {
@@ -125,7 +129,6 @@ class Stimuli(private val path: String, private val endsWith: String, val hardco
         }).toVector
     }
 
-    private def getAverage(vector: Vector[Measurement]): Double = {
+    private def getAverage(vector: Vector[Measurement]): Double =
         vector.map(_.value).sum / vector.size
-    }
 }
