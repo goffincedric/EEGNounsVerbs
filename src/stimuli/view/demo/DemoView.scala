@@ -6,7 +6,7 @@ import javafx.scene.control._
 import javafx.scene.layout.{HBox, VBox}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         17/10/2018 16:12
   *
   */

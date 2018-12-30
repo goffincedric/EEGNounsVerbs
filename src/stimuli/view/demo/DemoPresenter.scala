@@ -13,7 +13,7 @@ import stimuli.utils.customChart.LineChartWithMarkers
 import stimuli.view.chartAnalysis.{ChartAnalysisPresenter, ChartAnalysisView}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         17/10/2018 16:15
   *
   */

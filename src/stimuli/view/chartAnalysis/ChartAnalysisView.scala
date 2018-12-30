@@ -9,7 +9,7 @@ import stimuli.model.analysis.AnalysisType
 import stimuli.utils.customChart.LineChartWithMarkers
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         17/10/2018 16:12
   *
   */

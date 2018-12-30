@@ -8,7 +8,7 @@ import stimuli.services.options.OptionsService
 import stimuli.utils.NodeFinder
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         07/12/2018 09:52
   *
   */
