@@ -5,7 +5,7 @@ import stimuli.model.Stimuli
 import stimuli.view.demo.{DemoPresenter, DemoView}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         13/10/2018 12:14
   *
   */

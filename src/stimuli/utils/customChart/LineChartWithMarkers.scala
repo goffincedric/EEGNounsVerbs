@@ -12,7 +12,7 @@ import javafx.scene.shape._
 import javafx.util.Duration
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         26/11/2018 13:06
   *
   */

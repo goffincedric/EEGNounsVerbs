@@ -5,7 +5,7 @@ import javafx.scene.control.{Button, Label, ScrollPane, TextField}
 import javafx.scene.layout.{BorderPane, GridPane, HBox, VBox}
 
 /**
-  * @author Cédric Goffin
+  * @author Cédric Goffin & Thomas Verhoeven
   *         07/12/2018 09:20
   *
   */
