@@ -36,9 +36,8 @@ class OptionsService(val optionsPath: String) {
         }
     }
 
-    def getOption(name: String): AnalysisOption = {
-        getOptions.filter(o => o.name.equals(name)).head
-    }
+    def getOption(name: String): AnalysisOption =
+        getOptions.filter(_.name.equals(name)).head
 
     private def getDefaultOptions: Array[AnalysisOption] = {
         Array(

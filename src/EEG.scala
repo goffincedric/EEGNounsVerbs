@@ -32,7 +32,7 @@ class EEG extends Application {
             }
             val model = new Stimuli(getParameters.getNamed.get("filesPath"), "_NounVerb.csv", getParameters.getNamed.getOrDefault("dataDelaysMS", "7.8125").toDouble, getParameters.getNamed.get("optionsFilePath"))
             val demoview = new DemoView
-            val presenter = new DemoPresenter(model, demoview)
+            new DemoPresenter(model, demoview)
 
             // Set up & show stage
             val scene = new Scene(demoview)
